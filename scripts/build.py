@@ -71,11 +71,22 @@ replace("wg.setAttribute('aD',new T.BufferAttribute(dp,1));", "wg.setAttribute('
 replace('c.eg=eg;c.mg=mg;c.cs=cs;', 'c.eg=eg;c.mg=mg;c.waterInfo=waterInfo;c.cs=cs;')
 
 # The new plant generator has its own seeded random stream.
-replace('function* genProps(c){',(source/'aquatic.js').read_text()+'\nfunction* genProps(c){')
+replace('function* genProps(c){',(source/'trees.js').read_text()+'\n'+(source/'aquatic.js').read_text()+'\nfunction* genProps(c){')
 replace('g.index=bl.index;g.setAttribute(\'position\',bl.attributes.position);',"g.index=bl.index.clone();g.setAttribute('position',bl.attributes.position.clone());")
 replace('im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;made.push(im)',"im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;if(mat===MTS||mat===LM)im.customDepthMaterial=treeDepth;made.push(im)")
 replace('co.setRGB(...a[5])},MTS);yield;', 'co.setRGB(...a[5])},LM);addCanopyLeaves(pd,x0,z0,made,lo);yield;')
 replace('c.pm=made;for(const m of made)', 'c.crowns=pd;c.pm=made;for(const m of made)')
+# ---- Pass 6a: our own curved/tapered branch skeleton for generic + dead trees ----
+replace("tpos=[],lo=c.lo=wantLo(c);","tpos=[],bv=[],bn=[],bi=[],bc=[],lo=c.lo=wantLo(c);")
+NEW_TREE = """ const st=savannahTree(tr,{bv,bn,bi,bc,x0,z0},x,e,z,u,lo,ty===2);
+ if(st.lf)for(const tp of st.tips)pd.push([tp[0],tp[1],tp[2],tp[3],tp[4],st.lf]);
+ col.push([x,z,st.R+.2,1e9]);tpos.push([x,z,st.R,st.pr])};"""
+i6=s.index("  const dead=ty===2,R=");j6=s.index("tpos.push([x,z,R,pr])};",i6)+len("tpos.push([x,z,R,pr])};")
+if s.count("  const dead=ty===2,R=")!=1 or s.count("tpos.push([x,z,R,pr])};")!=1: raise ValueError("6a tree anchors not unique")
+s=s[:i6]+NEW_TREE+"\n"+s[j6:]
+replace("const D=new T.Object3D(),co=new T.Color(),made=[];D.rotation.order='YXZ';",
+ "const D=new T.Object3D(),co=new T.Color(),made=[];D.rotation.order='YXZ';\n if(bv.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(bv,3));g.setAttribute('normal',new T.Float32BufferAttribute(bn,3));g.setAttribute('color',new T.Float32BufferAttribute(bc,3));g.setIndex(bi);const m=new T.InstancedMesh(g,MT_BRANCH,1);m.setMatrixAt(0,new T.Matrix4());m.castShadow=true;m.customDepthMaterial=treeDepth;m.frustumCulled=false;made.push(m)}")
+
 replace('else if(s===1)c.job=genGrass(c);else c.job=genProps(c)', 'else if(s===1)c.job=genGrass(c);else if(s===2)c.job=genProps(c);else c.job=genAquatic(c)')
 replace("catch(err){c.job=null;c.fail=(c.fail||0)+1", "catch(err){if(!c.fail)console.error('Chunk '+c.key,err);c.job=null;c.fail=(c.fail||0)+1")
 replace("c.pm=[];c.col=[];c.bq=[];c.eg=c.mg=null", "c.pm=[];c.aqm=[];c.crowns=[];c.col=[];c.bq=[];c.eg=c.mg=c.waterInfo=c.soilInfo=null")
