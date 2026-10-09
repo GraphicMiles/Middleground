@@ -20,7 +20,8 @@ Values are display RGB starting colours. The build converts them to linear light
 | Grey sand | 0.56, 0.53, 0.47 | Neutral floodplain soil |
 | Ochre soil | 0.53, 0.40, 0.28 | Warm mineral patches |
 | Clay crust | 0.67, 0.63, 0.54 | Fine cracks in dry patches |
-| Loam | 0.36, 0.32, 0.25 | Darker soil near vegetation |
+| Loam | 0.36, 0.32, 0.25 | Darker soil under grass cover |
+| Silt | 0.44, 0.42, 0.35 | Fine flood deposits above the water table |
 | Damp mud | 0.235, 0.205, 0.165 | Smooth, darker surface |
 | Submerged bed | 0.145, 0.145, 0.125 | Muted sand and silt |
 

@@ -3,7 +3,7 @@
 // Heights, seed, collisions, grass/tree placement and locomotion are unchanged.
 const GROUND={
  version:3,_loaded:0,mode:'physical',
- palette:{sand:[.62,.55,.44],greySand:[.56,.53,.47],ochre:[.53,.40,.28],clay:[.67,.63,.54],loam:[.36,.32,.25],mud:[.235,.205,.165],bed:[.145,.145,.125]},
+ palette:{sand:[.62,.55,.44],greySand:[.56,.53,.47],ochre:[.53,.40,.28],clay:[.67,.63,.54],loam:[.36,.32,.25],silt:[.44,.42,.35],mud:[.235,.205,.165],bed:[.145,.145,.125]},
  profile(x,z,e,m,slope=0){
   const s=e-WL,dry=1-sm(.44,.82,m);
   const wet=cl((1-sm(.025,.80,s))*(.73+.27*m)+.16*sm(.66,.90,m)*(1-sm(.65,1.8,s)));
@@ -11,13 +11,20 @@ const GROUND={
   const clay=sm(.15,.48,s)*(1-sm(.95,1.55,s))*clayField*(1-wet)*(.55+.45*dry)*(1-sm(.15,.32,slope));
   const gravel=sm(.07,.20,slope)*(.4+.6*mineral)*(1-wet);
   const sand=(1-clay)*(1-wet)*(.62+.38*dry);
-  return {wet,clay,gravel,sand,dry,mineral};
+  // Flood-deposited silt from the Okavango reference: a fine, slightly cool band
+  // above the water table, between saturated mud and the dry mineral soils.
+  const silt=sm(.02,.30,s)*(1-sm(.62,1.30,s))*(1-wet*.82)*(.45+.55*sm(.40,.66,vn(x/44-13,z/44+27,194)));
+  // Soil under grass cover darkens with accumulated litter, so loam follows the
+  // vegetated moisture band rather than sitting on every damp surface.
+  const grass=sm(-.05,.35,s)*sm(.55,1.15,m)*(1-sm(.85,1.65,s))*(1-wet*.60);
+  return {wet,clay,gravel,sand,dry,mineral,silt,grass};
  },
  color(e,m,x,z,slope=0,profile=null){
   const p=profile||GROUND.profile(x,z,e,m,slope),a=GROUND.palette;
   let c=mix3(a.greySand,a.sand,sm(.25,.74,p.mineral));
+  c=mix3(c,a.silt,p.silt*.55);
   c=mix3(c,a.ochre,sm(.64,.88,p.mineral)*(.25+.30*p.dry));
-  c=mix3(c,a.loam,(1-p.dry)*.34);
+  c=mix3(c,a.loam,cl((1-p.dry)*.26+p.grass*.24,0,.48));
   c=mix3(c,a.clay,p.clay*.70);
   c=mix3(c,a.mud,p.wet*.87);
   if(e<WL)c=mix3(c,a.bed,sm(0,.50,WL-e));
@@ -26,7 +33,7 @@ const GROUND={
  },
  inspect(x,z){
   const e=H(x,z),m=Mo(x,z,e),slope=Math.hypot(H(x+.6,z)-H(x-.6,z),H(x,z+.6)-H(x,z-.6))/1.2,p=GROUND.profile(x,z,e,m,slope);
-  const material=e<WL?'submerged sand/silt':p.wet>.45?'damp mud/silt':p.clay>.18?'dry clay crust':p.gravel>.25?'gravelly ochre soil':'Kalahari-style sand/loam';
+  const material=e<WL?'submerged sand/silt':p.wet>.45?'damp mud/silt':p.clay>.18?'dry clay crust':p.silt>.30?'flood-deposited silt':p.gravel>.25?'gravelly ochre soil':'Kalahari-style sand/loam';
   return {material,height:e,moisture:m,slope,...p,color:GROUND.color(e,m,x,z,slope)};
  }
 };
