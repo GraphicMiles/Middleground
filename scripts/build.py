@@ -39,7 +39,7 @@ i=s.index('const CG=');j=s.index('const place=',i)
 legacy=s[s.index('const cmask=',i):s.index('function ground(',i)]
 s=s[:i]+legacy+'function ground(e,m,x,z){return GROUND.color(e,m,x,z)}\n'+s[j:]
 replace('am=new Float32Array(N*N);let cs=0;', 'am=new Float32Array(N*N),soilInfo=new Float32Array(N*N*4);let cs=0;')
-replace('const cc=ground(e,m,x,z),v=.94+.12*h(Math.floor(x*.5),Math.floor(z*.5),9);', 'const slope=Math.hypot(nx,nz)/(2*ST),surface=GROUND.profile(x,z,e,m,slope),cc=GROUND.color(e,m,x,z,slope,surface),v=1;soilInfo.set([surface.wet,surface.clay,surface.gravel,surface.sand],k*4);')
+replace('const cc=ground(e,m,x,z),v=.94+.12*h(Math.floor(x*.5),Math.floor(z*.5),9);', 'const slope=Math.hypot(nx,nz)/(2*ST),surface=GROUND.profile(x,z,e,m,slope),cc=GROUND.color(e,m,x,z,slope,surface),v=1;soilInfo.set([surface.wet,surface.clay,surface.gravel,surface.crack],k*4);')
 replace("g.setAttribute('aM',new T.BufferAttribute(am,1));", "g.setAttribute('aM',new T.BufferAttribute(am,1));g.setAttribute('aSoil',new T.BufferAttribute(soilInfo,4));")
 replace('const t=new T.Mesh(g,TM);t.receiveShadow=true;', 'const t=new T.Mesh(g,TM);t.receiveShadow=true;t.userData.ground=true;')
 replace('c.eg=eg;c.mg=mg;c.cs=cs;', 'c.soilInfo=soilInfo;c.eg=eg;c.mg=mg;c.cs=cs;')

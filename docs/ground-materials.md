@@ -25,7 +25,7 @@ Values are display RGB starting colours. The build converts them to linear light
 | Damp mud | 0.235, 0.205, 0.165 | Smooth, darker surface |
 | Submerged bed | 0.145, 0.145, 0.125 | Muted sand and silt |
 
-Height, moisture, slope, and seeded mineral fields control the material mixture. The wet-ground blend lowers roughness and reduces normal detail. Dry clay receives a fine crack mask that fades with distance.
+Height, moisture, slope, and seeded mineral fields control the material mixture. The wet-ground blend lowers roughness and reduces normal detail. Cracking is reserved for a dried clay crust: it is gated on dryness rather than on clay content alone, broken into seeded patches at two scales, and fades with distance.
 
 ## Texture maps
 

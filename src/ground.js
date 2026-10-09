@@ -2,7 +2,7 @@
 // Reference photographs inform colours only. Every shipped texture is original.
 // Heights, seed, collisions, grass/tree placement and locomotion are unchanged.
 const GROUND={
- version:3,_loaded:0,mode:'physical',
+ version:4,_loaded:0,mode:'physical',
  palette:{sand:[.62,.55,.44],greySand:[.56,.53,.47],ochre:[.53,.40,.28],clay:[.67,.63,.54],loam:[.36,.32,.25],silt:[.44,.42,.35],mud:[.235,.205,.165],bed:[.145,.145,.125]},
  profile(x,z,e,m,slope=0){
   const s=e-WL,dry=1-sm(.44,.82,m);
@@ -17,7 +17,11 @@ const GROUND={
   // Soil under grass cover darkens with accumulated litter, so loam follows the
   // vegetated moisture band rather than sitting on every damp surface.
   const grass=sm(-.05,.35,s)*sm(.55,1.15,m)*(1-sm(.85,1.65,s))*(1-wet*.60);
-  return {wet,clay,gravel,sand,dry,mineral,silt,grass};
+  // A cracked pan needs a dried clay crust, not merely clay-rich soil, so this
+  // is gated harder on dryness than the pale crust colour and broken into
+  // patches instead of covering every clay surface uniformly.
+  const crack=clay*sm(.30,.68,dry)*sm(.22,.55,s)*(1-sm(.12,.30,slope))*sm(.38,.70,vn(x/23-2.6,z/23+14.2,195));
+  return {wet,clay,gravel,sand,dry,mineral,silt,grass,crack};
  },
  color(e,m,x,z,slope=0,profile=null){
   const p=profile||GROUND.profile(x,z,e,m,slope),a=GROUND.palette;
@@ -44,7 +48,7 @@ for(const t of [groundDetail,groundNormal]){t.wrapS=t.wrapT=T.RepeatWrapping;t.m
 const groundPhysical=new T.MeshStandardMaterial({name:'Savanna ground',vertexColors:true,map:groundDetail,normalMap:groundNormal,roughness:.93,metalness:0,normalScale:new T.Vector2(.45,.45)});
 const groundLow=new T.MeshLambertMaterial({name:'Savanna ground low',vertexColors:true,map:groundDetail});
 function compileGround(mat,physical){
- mat.customProgramCacheKey=()=>physical?'ground-physical-v3':'ground-low-v3';
+ mat.customProgramCacheKey=()=>physical?'ground-physical-v4':'ground-low-v4';
  mat.onBeforeCompile=s=>{
   for(const k of ['uOrg','uFX','uT','uDay'])s.uniforms[k]=U[k];
   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nattribute vec4 aSoil;uniform vec2 uOrg;varying vec3 vGround;varying vec4 vSoil;')
@@ -62,9 +66,12 @@ function compileGround(mat,physical){
    vec4 groundTex=texture2D(map,vUv);
    float groundDistance=${dist};
    float closeGround=1.-smoothstep(12.,34.,groundDistance);
-   float clayCrack=vSoil.y*closeGround*step(-.55,vGround.y);
+   float clayCrack=vSoil.w*closeGround*step(-.55,vGround.y);
    diffuseColor.rgb*=mix(1.,groundTex.r,.45+.55*closeGround);
-   diffuseColor.rgb*=1.-(1.-groundTex.a)*clayCrack*.34;
+   float crackMask=groundTex.a;
+   // A second, wider crack scale stops the crust reading as one uniform overlay.
+   if(clayCrack>.012)crackMask=mix(crackMask,texture2D(map,vUv*.61+vec2(.17,.09)).a,.55);
+   diffuseColor.rgb*=1.-(1.-crackMask)*clayCrack*.42;
    diffuseColor.rgb+=vec3(.021,.019,.016)*groundTex.g*vSoil.z*closeGround;
    // Preserve the water pass's restrained, very-shallow bed caustics.
    float bedDepth=-.55-vGround.y;
