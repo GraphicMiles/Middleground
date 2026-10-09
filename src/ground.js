@@ -2,7 +2,7 @@
 // Reference photographs inform colours only. Every shipped texture is original.
 // Heights, seed, collisions, grass/tree placement and locomotion are unchanged.
 const GROUND={
- version:4,_loaded:0,mode:'physical',
+ version:5,_loaded:0,mode:'physical',
  palette:{sand:[.62,.55,.44],greySand:[.56,.53,.47],ochre:[.53,.40,.28],clay:[.67,.63,.54],loam:[.36,.32,.25],silt:[.44,.42,.35],mud:[.235,.205,.165],bed:[.145,.145,.125]},
  profile(x,z,e,m,slope=0){
   const s=e-WL,dry=1-sm(.44,.82,m);
@@ -31,7 +31,7 @@ const GROUND={
   c=mix3(c,a.loam,cl((1-p.dry)*.26+p.grass*.24,0,.48));
   c=mix3(c,a.clay,p.clay*.70);
   c=mix3(c,a.mud,p.wet*.87);
-  if(e<WL)c=mix3(c,a.bed,sm(0,.50,WL-e));
+  if(e<WL)c=mix3(c,a.bed,sm(0,.85,WL-e));
   const patch=.94+.10*vn(x/12,z/12,193);
   return c.map(v=>v*patch);
  },
@@ -48,7 +48,7 @@ for(const t of [groundDetail,groundNormal]){t.wrapS=t.wrapT=T.RepeatWrapping;t.m
 const groundPhysical=new T.MeshStandardMaterial({name:'Savanna ground',vertexColors:true,map:groundDetail,normalMap:groundNormal,roughness:.93,metalness:0,normalScale:new T.Vector2(.45,.45)});
 const groundLow=new T.MeshLambertMaterial({name:'Savanna ground low',vertexColors:true,map:groundDetail});
 function compileGround(mat,physical){
- mat.customProgramCacheKey=()=>physical?'ground-physical-v4':'ground-low-v4';
+ mat.customProgramCacheKey=()=>physical?'ground-physical-v5':'ground-low-v5';
  mat.onBeforeCompile=s=>{
   for(const k of ['uOrg','uFX','uT','uDay'])s.uniforms[k]=U[k];
   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nattribute vec4 aSoil;uniform vec2 uOrg;varying vec3 vGround;varying vec4 vSoil;')
@@ -62,7 +62,12 @@ function compileGround(mat,physical){
   // Mip filtering and world UVs prevent screen grain and temporal sparkle.
   const dist=physical?'length(vViewPosition)':'distance(vGround,vec3(cameraPosition.x+uOrg.x,cameraPosition.y,cameraPosition.z+uOrg.y))';
   if(!physical){s.uniforms.uOrg=U.uOrg;s.fragmentShader=s.fragmentShader.replace('uniform float uFX,uT,uDay;','uniform float uFX,uT,uDay;uniform vec2 uOrg;')}
-  s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`#ifdef USE_MAP
+  s.fragmentShader=s.fragmentShader.replace('#include <map_fragment>',`
+   // Surface relief follows the material: embedded grit and a dried crust carry
+   // texture, while wet mud and submerged silt are smooth. Amplitude stays low
+   // on purpose so the ground reads as soil rather than embossed plastic.
+   float relief=(1.-vSoil.x*.78)*(.80+vSoil.z*.60+vSoil.w*.32);
+   #ifdef USE_MAP
    vec4 groundTex=texture2D(map,vUv);
    float groundDistance=${dist};
    float closeGround=1.-smoothstep(12.,34.,groundDistance);
@@ -82,8 +87,10 @@ function compileGround(mat,physical){
    }
    #endif`);
   if(physical){
-   s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.94,.38,vSoil.x);');
-   const normals=T.ShaderChunk.normal_fragment_maps.replace('mapN.xy *= normalScale;', 'mapN.xy *= normalScale *(.30+.70*uFX)*(1.-vSoil.x*.72)*(1.-smoothstep(18.,65.,length(vViewPosition)));');
+   // Damp earth takes a broad sheen, not a mirror one, so the wet end stops
+   // short of reading as polished stone.
+   s.fragmentShader=s.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.94,.46,vSoil.x);');
+   const normals=T.ShaderChunk.normal_fragment_maps.replace('mapN.xy *= normalScale;', 'mapN.xy *= normalScale *(.30+.70*uFX)*relief*(1.-smoothstep(18.,65.,length(vViewPosition)));');
    s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>',normals);
   }
  };
