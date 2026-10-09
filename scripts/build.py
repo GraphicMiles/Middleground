@@ -29,8 +29,8 @@ region('/* terrain material:','/* shared prop geometry */','const GROUND_TEXTURE
 replace('const TRG=new T.CylinderGeometry', '''// A crown reads as a cluster of foliage lobes, not a smooth ellipsoid, so the
 // displacement is strong and low frequency: that is what puts gaps and
 // unevenness into the silhouette instead of one rounded blob.
-function canopyGeometry(){const g=new T.SphereGeometry(1,14,9),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
-const PDG_LO=new T.SphereGeometry(1,8,5);
+function canopyGeometry(seg,ring){const g=new T.SphereGeometry(1,seg,ring),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
+const PDG_LO=canopyGeometry(8,5);
 // Trunks sweep out into the ground instead of standing as straight cones. The
 // profile is concave: a rapid flare that settles into the shaft, ending at .62
 // so it meets the next branch segment (radius R*.62) without a visible step.
@@ -43,7 +43,7 @@ const TRT=trunkGeometry();
 function baobabGeometry(){const pts=[];for(let i=0;i<=7;i++){const y=i/7;pts.push(new T.Vector2(Math.max(.30,.55+.55*Math.exp(-y*2.2)-.28*Math.pow(y,6)),y))}const g=new T.LatheGeometry(pts,12);g.computeVertexNormals();return g}
 const TRB_BAOBAB=baobabGeometry();
 const TRG=new T.CylinderGeometry''')
-replace('PDG=jit(new T.SphereGeometry(1,9,5))','PDG=canopyGeometry()')
+replace('PDG=jit(new T.SphereGeometry(1,9,5))','PDG=canopyGeometry(14,9)')
 replace('TRB=new T.CylinderGeometry(.8,1,1,12,1,false).translate(0,.5,0)','TRB=TRB_BAOBAB')
 replace('add(PDG,pd,true', 'add(lo?PDG_LO:PDG,pd,true')
 # The old palette was authored as display colour. Decode albedo before ACES,

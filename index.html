@@ -542,8 +542,8 @@ const jit=g=>{const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p
 // A crown reads as a cluster of foliage lobes, not a smooth ellipsoid, so the
 // displacement is strong and low frequency: that is what puts gaps and
 // unevenness into the silhouette instead of one rounded blob.
-function canopyGeometry(){const g=new T.SphereGeometry(1,14,9),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
-const PDG_LO=new T.SphereGeometry(1,8,5);
+function canopyGeometry(seg,ring){const g=new T.SphereGeometry(1,seg,ring),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
+const PDG_LO=canopyGeometry(8,5);
 // Trunks sweep out into the ground instead of standing as straight cones. The
 // profile is concave: a rapid flare that settles into the shaft, ending at .62
 // so it meets the next branch segment (radius R*.62) without a visible step.
@@ -555,7 +555,7 @@ const TRT=trunkGeometry();
 // inside that for the whole generated radius range of 1.1 to 2.0.
 function baobabGeometry(){const pts=[];for(let i=0;i<=7;i++){const y=i/7;pts.push(new T.Vector2(Math.max(.30,.55+.55*Math.exp(-y*2.2)-.28*Math.pow(y,6)),y))}const g=new T.LatheGeometry(pts,12);g.computeVertexNormals();return g}
 const TRB_BAOBAB=baobabGeometry();
-const TRG=new T.CylinderGeometry(.5,1,1,8,1,false).translate(0,.5,0),TRB=TRB_BAOBAB,PDG=canopyGeometry(),CAG=jit(new T.SphereGeometry(1,10,6)),RKG=jit(new T.IcosahedronGeometry(1,1));
+const TRG=new T.CylinderGeometry(.5,1,1,8,1,false).translate(0,.5,0),TRB=TRB_BAOBAB,PDG=canopyGeometry(14,9),CAG=jit(new T.SphereGeometry(1,10,6)),RKG=jit(new T.IcosahedronGeometry(1,1));
 const IDX=new Uint16Array(SEG*SEG*6);
 {let q=0;for(let j=0;j<SEG;j++)for(let i=0;i<SEG;i++){const k=j*N+i;IDX.set([k,k+N,k+1,k+1,k+N,k+N+1],q);q+=6}}
 /* ---------- chunk streaming ---------- */
@@ -766,7 +766,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  const D=new T.Object3D(),co=new T.Color(),made=[];D.rotation.order='YXZ';
  const add=(g,list,sh,f,mat)=>{if(!list.length)return;const im=new T.InstancedMesh(g,mat,list.length);list.forEach((a,i)=>{D.rotation.set(0,0,0);D.scale.set(1,1,1);f(a);if(mat===MT)co.convertSRGBToLinear();D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)});im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;if(mat===MTS||mat===LM)im.customDepthMaterial=treeDepth;made.push(im)};
  const cyl=a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[4],a[3]);D.rotation.set(a[5],a[6],0);co.setRGB(...a[7])};
- add(TRT,tt,true,cyl,MTS);add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;
+ add(lo?TRG:TRT,tt,true,cyl,MTS);add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;
  add(lo?PDG_LO:PDG,pd,true,a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[3]*.46,a[3]);D.rotation.y=a[4];co.setRGB(...a[5])},LM);addCanopyLeaves(pd,x0,z0,made,lo);yield;
  add(CAG,bu,false,a=>{const r=a[3],v=a[4];D.position.set(a[0]-x0,a[1]+r*.3,a[2]-z0);D.scale.set(r,r*.75,r);D.rotation.y=a[0];co.setRGB(.2+.3*v*v,.22+.2*v*v,.08+.04*v)},MT);
  add(RKG,ro,true,a=>{const r=a[3];D.position.set(a[0]-x0,a[1]+r*.12,a[2]-z0);D.scale.set(r,r*.6,r*.8);D.rotation.y=a[4];const v=.8+.4*a[4]/6.28;co.setRGB(.46*v,.37*v,.29*v)},MT);
