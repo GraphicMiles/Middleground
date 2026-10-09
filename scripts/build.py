@@ -31,6 +31,12 @@ replace('const TRG=new T.CylinderGeometry', '''// A crown reads as a cluster of 
 // unevenness into the silhouette instead of one rounded blob.
 function canopyGeometry(){const g=new T.SphereGeometry(1,14,9),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
 const PDG_LO=new T.SphereGeometry(1,8,5);
+// Trunks sweep out into the ground instead of standing as straight cones. The
+// profile is concave: a rapid flare that settles into the shaft, ending at .62
+// so it meets the next branch segment (radius R*.62) without a visible step.
+// The base stays within the collision radius the simulation already uses.
+function trunkGeometry(){const pts=[];for(let i=0;i<=6;i++){const y=i/6;pts.push(new T.Vector2(.62+1.03*Math.exp(-y*5.2),y))}const g=new T.LatheGeometry(pts,9);g.computeVertexNormals();return g}
+const TRT=trunkGeometry();
 const TRG=new T.CylinderGeometry''')
 replace('PDG=jit(new T.SphereGeometry(1,9,5))','PDG=canopyGeometry()')
 replace('add(PDG,pd,true', 'add(lo?PDG_LO:PDG,pd,true')

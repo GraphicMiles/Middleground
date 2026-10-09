@@ -159,8 +159,8 @@ function* genGrass(c){const tier=c.tier=tierOf(c);c.gq=qm;const want=Math.floor(
  const bl=tier===3?BL:BL2,g=new T.InstancedBufferGeometry();g.index=bl.index;g.setAttribute('position',bl.attributes.position);
  g.setAttribute('aP',new T.InstancedBufferAttribute(aP.slice(0,k*3),3));g.setAttribute('aR',new T.InstancedBufferAttribute(aR.slice(0,k*4),4));g.instanceCount=k;
  g.boundingSphere=new T.Sphere(new T.Vector3(CS/2,1,CS/2),CS*.75);const m=new T.Mesh(g,GM);drop();c.gm=m;c.meshes.push(m);world.add(m);place(c)}
-function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],bk=[],pd=[],col=[],bq=[],lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
- const br=(x,y,z,r,len,t,a,d,cc,lf,pr)=>{tk.push([x,y,z,r,len,t,a,cc]);const ex=x+Math.sin(t)*Math.sin(a)*len,ey=y+Math.cos(t)*len,ez=z+Math.sin(t)*Math.cos(a)*len;
+function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],tt=[],bk=[],pd=[],col=[],bq=[],lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
+ const br=(x,y,z,r,len,t,a,d,cc,lf,pr,root)=>{(root?tt:tk).push([x,y,z,r,len,t,a,cc]);const ex=x+Math.sin(t)*Math.sin(a)*len,ey=y+Math.cos(t)*len,ez=z+Math.sin(t)*Math.cos(a)*len;
   if(d>0){const n=2+(tr()<.35?1:0);for(let i=0;i<n;i++)br(ex,ey,ez,r*.6,len*(.62+.25*tr()),Math.min(1.45,t+(lf?.15+tr()*.5:-.1+tr()*.45)),a+(i-(n-1)/2)*1.5+(tr()-.5)*.6,d-1,cc,lf,pr)}
   else if(lf)pd.push([ex,ey,ez,pr*(.75+.5*tr()),tr()*6.28,lf]);return[ex,ey,ez]};
  /* every tree draws from its own seeded stream, so layout never depends on LOD */
@@ -168,7 +168,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
   if(ty===1){const r=1.1+tr()*.9,Hh=4.5+tr()*3.5;bk.push([x,e-.3,z,r,Hh,(tr()-.5)*.05,a,[.46,.40,.34]]);
    for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:2,[.42,.37,.31],0,0);col.push([x,z,r*.95,1e9]);return}
   const dead=ty===2,R=.14+.14*tr(),h1=1.4+tr()*1.2,t1=.1+tr()*.22,h2=1.2+tr()*1.4,cc=dead?[.07,.055,.05]:[.20,.15,.11],lf=dead?0:[.19+.07*u,.25+.07*u,.07+.03*u];
-  const p=br(x,e-.1,z,R,h1,t1,a,0,cc,0,0),q=br(p[0],p[1],p[2],R*.62,h2,-t1*(.5+tr()),a,0,cc,0,0),n=3+(tr()*2|0),pr=1.5+tr()*1.1;
+  const p=br(x,e-.1,z,R,h1,t1,a,0,cc,0,0,1),q=br(p[0],p[1],p[2],R*.62,h2,-t1*(.5+tr()),a,0,cc,0,0),n=3+(tr()*2|0),pr=1.5+tr()*1.1;
   for(let i=0;i<n;i++)br(q[0],q[1],q[2],R*.42,1.5+tr()*1.4,dead?.35+tr()*.7:.5+tr()*.45,a+i*(6.28/n)+tr()*.6,lo?0:dead?2:1,cc,lf,pr);
   if(lf)pd.push([q[0],q[1]+.5,q[2],pr*1.1,tr()*6.28,lf]);col.push([x,z,R+.2,1e9])};
  for(let i=0;i<4;i++){for(let j=0;j<4;j++){const x=x0+(i+rng())*16,z=z0+(j+rng())*16,e=H(x,z),s=e-WL,m=Mo(x,z,e),q=vn(x/150,z/150,11)*.7+vn(x/38,z/38,12)*.3,p=(q>.6?.5:q>.5?.14:.025)*(s>.6?1:0)*(m>.3?1:.5),a=rng(),b=rng(),d=rng();
@@ -184,7 +184,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  const D=new T.Object3D(),co=new T.Color(),made=[];D.rotation.order='YXZ';
  const add=(g,list,sh,f,mat)=>{if(!list.length)return;const im=new T.InstancedMesh(g,mat,list.length);list.forEach((a,i)=>{D.rotation.set(0,0,0);D.scale.set(1,1,1);f(a);D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)});im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;made.push(im)};
  const cyl=a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[4],a[3]);D.rotation.set(a[5],a[6],0);co.setRGB(...a[7])};
- add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;
+ add(TRT,tt,true,cyl,MTS);add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;
  add(PDG,pd,true,a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[3]*.46,a[3]);D.rotation.y=a[4];co.setRGB(...a[5])},MTS);yield;
  add(CAG,bu,false,a=>{const r=a[3],v=a[4];D.position.set(a[0]-x0,a[1]+r*.3,a[2]-z0);D.scale.set(r,r*.75,r);D.rotation.y=a[0];co.setRGB(.2+.3*v*v,.22+.2*v*v,.08+.04*v)},MT);
  add(RKG,ro,true,a=>{const r=a[3];D.position.set(a[0]-x0,a[1]+r*.12,a[2]-z0);D.scale.set(r,r*.6,r*.8);D.rotation.y=a[4];const v=.8+.4*a[4]/6.28;co.setRGB(.46*v,.37*v,.29*v)},MT);
