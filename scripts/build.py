@@ -13,6 +13,10 @@ if not inline or not external:
 s=inline.group(1)
 original_shell=original[:external.start()]
 ground_textures=json.dumps({key:'data:image/png;base64,'+base64.b64encode((root/'assets'/name).read_bytes()).decode('ascii') for key,name in [('detail','ground-detail.png'),('normal','ground-normal.png')]})
+# Recorded ambience beds. Embedded as data URIs for the same reason the ground
+# textures are: the build must stay a single offline file with no network fetches.
+_amb=root/'assets'/'ambience'
+amb_audio=json.dumps({f.stem:'data:audio/ogg;base64,'+base64.b64encode(f.read_bytes()).decode('ascii') for f in sorted(_amb.glob('*.ogg'))}) if _amb.is_dir() else '{}'
 def replace(old,new):
  global s
  n=s.count(old)
@@ -97,7 +101,7 @@ replace("ren.setPixelRatio(pr);$('bq').textContent='GFX '+QN[qm]}", "ren.setPixe
 replace("$('bq').onclick=()=>{qm=(qm+1)%3;applyQ()};", "$('bq').onclick=()=>{qm=(qm+1)%3;applyQ();saveSettings()};")
 replace("$('bn').textContent='SENS '+SENS.toFixed(1)};", "$('bn').textContent='SENS '+SENS.toFixed(1);saveSettings()};")
 replace("e.textContent='ontouchstart' in window?", "e.textContent=coarse?")
-region('/* ---------- procedural audio ---------- */',"$('bj').addEventListener", (source/'audio.js').read_text())
+region('/* ---------- procedural audio ---------- */',"$('bj').addEventListener", 'const AMB_BEDS='+amb_audio+';\n'+(source/'audio.js').read_text())
 replace("$('bm').onclick=()=>{todI=(todI+1)%TODS.length;todT=TODS[todI];todTime=6};", "$('bm').onclick=()=>{todI=(todI+1)%TODS.length;setTime(TODS[todI].hour)};")
 replace("document.addEventListener('visibilitychange',()=>{if(AC&&AC.suspend)document.hidden?AC.suspend():AC.resume()});", "document.addEventListener('visibilitychange',()=>{resetInput();last=performance.now();if(AC){const p=document.hidden?AC.suspend():AC.resume();if(p&&p.catch)p.catch(()=>{})}});\naddEventListener('pagehide',saveSettings);")
 # Extend existing culling to the optional aquatic draws.

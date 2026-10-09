@@ -1,5 +1,36 @@
-/* ---------- procedural ambience, spatial calls and nearby water ---------- */
+/* ---------- ambience: recorded beds, procedural air, spatial calls ---------- */
 let AC=null,AU=null,bT=3,frogT=2;
+
+/* The recorded beds supply the broadband texture that filtered white noise
+   cannot fake: real air, real water, real insects. They are mixed strictly
+   UNDER the procedural layer, which keeps everything responsive to the player
+   and the wind. Long gain time constants so the beds glide rather than pump.
+   See assets/ambience for the sources and licences. */
+const BED_CFG={bay:{lp:5200,pan:-.25},park:{lp:9000,pan:.18},night:{lp:11000,pan:0}};
+
+function b64Buf(u){
+ const i=u.indexOf(','),bin=atob(u.slice(i+1)),a=new Uint8Array(bin.length);
+ for(let k=0;k<bin.length;k++)a[k]=bin.charCodeAt(k);
+ return a.buffer;
+}
+function startBeds(){
+ if(!AC||!AU||typeof AMB_BEDS!=='object')return;
+ AU.beds={};
+ for(const k in AMB_BEDS){
+  const c=BED_CFG[k]||{lp:9000,pan:0};
+  AC.decodeAudioData(b64Buf(AMB_BEDS[k]),buf=>{
+   if(!AC)return;
+   const sr=AC.createBufferSource();sr.buffer=buf;sr.loop=true;
+   const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=c.lp;
+   const g=AC.createGain();g.gain.value=0;
+   sr.connect(f);f.connect(g);
+   if(c.pan&&AC.createStereoPanner){const p=AC.createStereoPanner();p.pan.value=c.pan;g.connect(p);p.connect(AC.destination)}
+   else g.connect(AC.destination);
+   sr.start(0,Math.random()*Math.max(0,buf.duration-1));
+   AU.beds[k]=g;
+  },()=>{});
+ }
+}
 function audioInit(){
  if(AC)return;
  try{
@@ -14,6 +45,11 @@ function audioInit(){
   AU.water=loop('bandpass',620,.55);
   if(AC.createStereoPanner){AU.water.pan=AC.createStereoPanner();AU.water.g.connect(AU.water.pan);AU.water.pan.connect(AC.destination)}else AU.water.g.connect(AC.destination);
   AU.insects=loop('bandpass',3900,5);AU.insects.g.connect(AC.destination);
+  /* Nearby vegetation rustle: a higher, tighter band than the air layer, driven
+     by wind AND by how much brush the player is actually standing in, so it
+     reads as leaves moving around them rather than a constant hiss. */
+  AU.rustle=loop('bandpass',2600,2.2);AU.rustle.g.connect(AC.destination);
+  startBeds();
  }catch(e){AC=null}
 }
 function noiseHit(fq,vol,dur){
@@ -48,8 +84,24 @@ function frogCall(){
 }
 function audioStep(dt){
  if(!AC||!AU)return;const t=AC.currentTime,wind=cl((U.uWind.value.length()-.30)/.55),night=U.uNight.value;
- AU.g.gain.setTargetAtTime(.018+.060*wind*wind,t,.35);AU.f.frequency.setTargetAtTime(300+500*wind,t,.35);
- AU.insects.g.gain.setTargetAtTime((.002+night*.010)*(.72+.28*Math.sin(U.uT.value*8.)),t,.15);
+ const T=U.uT.value;
+ /* Air movement gusts on two slow incommensurate rates instead of holding one
+    steady filtered-noise level, which is what made it read as hiss. */
+ const gust=.80+.14*Math.sin(T*.31)+.08*Math.sin(T*.79+1.7);
+ AU.g.gain.setTargetAtTime((.010+.042*wind*wind)*gust,t,.35);
+ AU.f.frequency.setTargetAtTime(300+500*wind+40*Math.sin(T*.47),t,.35);
+ /* Halved: the night bed now carries real insects, so this only adds sparkle. */
+ AU.insects.g.gain.setTargetAtTime((.001+night*.005)*(.72+.28*Math.sin(T*8.)),t,.15);
+ const brush=1-cl(P.bs),mv=cl(P.spd/3);
+ AU.rustle.g.gain.setTargetAtTime((.003+.016*wind)*(.30+.70*brush)+.011*brush*mv,t,.25);
+ if(AU.beds){
+  const near=1-cl(AU.waterDistance/48),target={
+   bay:.22*near*(.88+.12*Math.sin(T*.13)),
+   park:.20*cl(U.uDay.value)*(.55+.45*wind),
+   night:.26*night*(.90+.10*Math.sin(T*.19+2.1))
+  };
+  for(const k in AU.beds)AU.beds[k].gain.setTargetAtTime(target[k]||0,t,2.2);
+ }
  const l=AC.listener,forwardX=-Math.sin(P.yaw),forwardZ=-Math.cos(P.yaw);
  if(l.positionX){l.positionX.value=P.x;l.positionY.value=cam.position.y;l.positionZ.value=P.z;l.forwardX.value=forwardX;l.forwardY.value=0;l.forwardZ.value=forwardZ;l.upX.value=0;l.upY.value=1;l.upZ.value=0}
  else{l.setPosition(P.x,cam.position.y,P.z);l.setOrientation(forwardX,0,forwardZ,0,1,0)}
@@ -62,7 +114,7 @@ function audioStep(dt){
  }
  const dx=AU.waterX-P.x,dz=AU.waterZ-P.z,dist=Math.hypot(dx,dz);
  if(AU.water.pan)AU.water.pan.pan.setTargetAtTime(cl((Math.cos(P.yaw)*dx-Math.sin(P.yaw)*dz)/Math.max(1,dist),-1,1),t,.25);
- AU.water.g.gain.setTargetAtTime((1-cl(AU.waterDistance/65))*.024*(.82+.18*Math.sin(U.uT.value*.8)),t,.4);
+ AU.water.g.gain.setTargetAtTime((1-cl(AU.waterDistance/65))*.024*(.82+.18*Math.sin(T*.8)),t,.4);
  bT-=dt;if(bT<0){bT=4+Math.random()*9;if(U.uDay.value>.65)chirp()}
  frogT-=dt;if(frogT<0){frogT=3+Math.random()*9;if(night>.25&&AU.waterDistance<65)frogCall()}
 }
