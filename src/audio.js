@@ -52,6 +52,27 @@ function audioInit(){
   startBeds();
  }catch(e){AC=null}
 }
+/* Material-specific ground contact. GROUND.inspect returns the same surface
+   classification the renderer uses, so a footstep agrees with what is actually
+   underfoot instead of the old single wet/dry switch. Wading is handled first
+   because water depth dominates whatever the bed material is. */
+function footstep(x,z,dpt){
+ if(!AC||!AU)return;const d=cl(dpt/1.2);
+ if(d>.04){noiseHit(2200+1400*d,.05+.07*d,.18+.16*d);if(d>.30)noiseHit(260,.06*d,.20);return}
+ const g=GROUND.inspect(x,z);
+ if(g.wet>.45){noiseHit(300,.085,.13);noiseHit(1800,.040,.09);return}
+ if(g.clay>.18){noiseHit(1400,.065,.08);noiseHit(5200,.030,.05);return}
+ if(g.gravel>.25){noiseHit(3200,.055,.07);noiseHit(6200,.028,.05);return}
+ if(g.silt>.30){noiseHit(900,.048,.13);return}
+ if(g.grass>.25){noiseHit(3300,.032,.13);return}
+ noiseHit(1100,.050,.15);
+}
+function landHit(x,z,dpt,im){
+ if(!AC||!AU)return;const v=cl(im/10);
+ if(dpt>.15){noiseHit(2400,.05+.10*v,.30);noiseHit(220,.05+.10*v,.22);return}
+ const g=GROUND.inspect(x,z);
+ noiseHit(g.wet>.45?700:g.clay>.18?1300:900,.07+.06*v,.22);
+}
 function noiseHit(fq,vol,dur){
  if(!AC||!AU)return;const sr=AC.createBufferSource();sr.buffer=AU.b;
  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=fq;

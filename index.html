@@ -1138,6 +1138,27 @@ function audioInit(){
   startBeds();
  }catch(e){AC=null}
 }
+/* Material-specific ground contact. GROUND.inspect returns the same surface
+   classification the renderer uses, so a footstep agrees with what is actually
+   underfoot instead of the old single wet/dry switch. Wading is handled first
+   because water depth dominates whatever the bed material is. */
+function footstep(x,z,dpt){
+ if(!AC||!AU)return;const d=cl(dpt/1.2);
+ if(d>.04){noiseHit(2200+1400*d,.05+.07*d,.18+.16*d);if(d>.30)noiseHit(260,.06*d,.20);return}
+ const g=GROUND.inspect(x,z);
+ if(g.wet>.45){noiseHit(300,.085,.13);noiseHit(1800,.040,.09);return}
+ if(g.clay>.18){noiseHit(1400,.065,.08);noiseHit(5200,.030,.05);return}
+ if(g.gravel>.25){noiseHit(3200,.055,.07);noiseHit(6200,.028,.05);return}
+ if(g.silt>.30){noiseHit(900,.048,.13);return}
+ if(g.grass>.25){noiseHit(3300,.032,.13);return}
+ noiseHit(1100,.050,.15);
+}
+function landHit(x,z,dpt,im){
+ if(!AC||!AU)return;const v=cl(im/10);
+ if(dpt>.15){noiseHit(2400,.05+.10*v,.30);noiseHit(220,.05+.10*v,.22);return}
+ const g=GROUND.inspect(x,z);
+ noiseHit(g.wet>.45?700:g.clay>.18?1300:900,.07+.06*v,.22);
+}
 function noiseHit(fq,vol,dur){
  if(!AC||!AU)return;const sr=AC.createBufferSource();sr.buffer=AU.b;
  const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=fq;
@@ -1238,11 +1259,11 @@ function move(dt){let a=(K.KeyD?1:0)-(K.KeyA?1:0),b=(K.KeyW?1:0)-(K.KeyS?1:0),sp
  P.bs+=(bsl-P.bs)*Math.min(1,dt*10);P.rt-=dt;if(bsl<.85&&P.spd>1.5&&P.rt<=0){P.rt=.28;noiseHit(4200,.045,.16)}
  P.x=nx;P.z=nz;P.spd=Math.hypot(P.vx,P.vz);const g=groundAt(P.x,P.z);
  const air=P.vy>0||P.y>g+(P.gr?.6:.03);
- if(air){P.vy-=19*dt;P.y+=P.vy*dt;P.gr=false;if(P.y<=g&&P.vy<=0){const im=-P.vy;P.y=g;P.vy=0;P.gr=true;if(im>3){P.dip=Math.max(P.dip,cl(im/10)*.3);noiseHit(wet>.05?2600:700,.1,.25)}}}
+ if(air){P.vy-=19*dt;P.y+=P.vy*dt;P.gr=false;if(P.y<=g&&P.vy<=0){const im=-P.vy;P.y=g;P.vy=0;P.gr=true;if(im>3){P.dip=Math.max(P.dip,cl(im/10)*.3);landHit(P.x,P.z,dpt,im)}}}
  else{P.y=g;P.vy=0;P.gr=true}
  P.ys=P.gr?P.ys+(P.y-P.ys)*Math.min(1,dt*16):P.y;
  let da=((P.ty-P.yaw+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;P.yaw+=da*(1-Math.exp(-dt*30));P.pitch+=(P.tp-P.pitch)*(1-Math.exp(-dt*30));
- const ph0=Math.floor(P.bob/Math.PI);P.bob+=P.spd*dt*1.7;if(Math.floor(P.bob/Math.PI)!==ph0&&P.gr&&P.spd>1)noiseHit(wet>.05?2600:1100,wet>.05?.12:.05,wet>.05?.35:.16);
+ const ph0=Math.floor(P.bob/Math.PI);P.bob+=P.spd*dt*1.7;if(Math.floor(P.bob/Math.PI)!==ph0&&P.gr&&P.spd>1)footstep(P.x,P.z,dpt);
  P.dip*=Math.exp(-dt*6);const bf=cl(P.spd/4),eye=P.ys+1.7-.12*cl(dpt)-P.dip+Math.sin(P.bob*2)*.04*bf;
  cam.position.set(P.x-ox+cy*Math.sin(P.bob)*.02*bf,eye,P.z-oz-sy*Math.sin(P.bob)*.02*bf);cam.rotation.set(P.pitch,P.yaw,Math.sin(P.bob)*.004*bf);
  const tf=70+(spr&&P.spd>4?7:0);if(Math.abs(cam.fov-tf)>.05){cam.fov+=(tf-cam.fov)*(1-Math.exp(-dt*6));cam.updateProjectionMatrix()}}

@@ -101,6 +101,11 @@ replace("ren.setPixelRatio(pr);$('bq').textContent='GFX '+QN[qm]}", "ren.setPixe
 replace("$('bq').onclick=()=>{qm=(qm+1)%3;applyQ()};", "$('bq').onclick=()=>{qm=(qm+1)%3;applyQ();saveSettings()};")
 replace("$('bn').textContent='SENS '+SENS.toFixed(1)};", "$('bn').textContent='SENS '+SENS.toFixed(1);saveSettings()};")
 replace("e.textContent='ontouchstart' in window?", "e.textContent=coarse?")
+
+# Route ground contact through the material-aware helpers instead of the
+# original wet/dry-only noiseHit at both call sites.
+replace("noiseHit(wet>.05?2600:700,.1,.25)","landHit(P.x,P.z,dpt,im)")
+replace("noiseHit(wet>.05?2600:1100,wet>.05?.12:.05,wet>.05?.35:.16)","footstep(P.x,P.z,dpt)")
 region('/* ---------- procedural audio ---------- */',"$('bj').addEventListener", 'const AMB_BEDS='+amb_audio+';\n'+(source/'audio.js').read_text())
 replace("$('bm').onclick=()=>{todI=(todI+1)%TODS.length;todT=TODS[todI];todTime=6};", "$('bm').onclick=()=>{todI=(todI+1)%TODS.length;setTime(TODS[todI].hour)};")
 replace("document.addEventListener('visibilitychange',()=>{if(AC&&AC.suspend)document.hidden?AC.suspend():AC.resume()});", "document.addEventListener('visibilitychange',()=>{resetInput();last=performance.now();if(AC){const p=document.hidden?AC.suspend():AC.resume();if(p&&p.catch)p.catch(()=>{})}});\naddEventListener('pagehide',saveSettings);")
