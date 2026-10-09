@@ -153,7 +153,7 @@ function* genGrass(c){const tier=c.tier=tierOf(c);c.gq=qm;const want=Math.floor(
   if(s<.4){hg=1.5+rng()*1.2;w=.07;dry=.1+.3*rng()}else if(m>.55){hg=.8+rng()*.8;dry=.15+rng()*.4}else{hg=.55+rng()*.85;dry=.6+rng()*.4}
   if(sml<.35)hg*=.45;if(big<.3&&s>.4){dry=.85+rng()*.15;hg*=.55}
   const nb=s<.4?3:5+(rng()*4|0),rad=.1+hg*.12;
-  for(let q=0;q<nb&&k<want;q++){const a=rng()*6.283,rr=rad*Math.sqrt(rng()),bx=lx+Math.cos(a)*rr,bz=lz+Math.sin(a)*rr;
+  for(let q=0;q<nb&&k<want;q++){const a=rng()*6.283,rr=rad*Math.pow(rng(),.62),bx=lx+Math.cos(a)*rr,bz=lz+Math.sin(a)*rr;
    aP.set([bx,samp(c.eg,cl(bx,0,CS),cl(bz,0,CS))-.03,bz],k*3);aR.set([hg*(.7+.5*rng()),w,rng()*6.283,cl(dry+(rng()-.5)*.25)],k*4);k++}}
  if(!k){drop();return}
  const bl=tier===3?BL:BL2,g=new T.InstancedBufferGeometry();g.index=bl.index;g.setAttribute('position',bl.attributes.position);

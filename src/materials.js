@@ -38,7 +38,7 @@ const GM=new T.ShaderMaterial({uniforms:U,side:T.DoubleSide,
   float d=distance(wp,cameraPosition),fade=1.-smoothstep(uFar*.6,uFar,d);
   float t=position.y,ph=hh(aP.xz),stf=.6+.8*hh(aP.zx+3.);
   float hg=aR.x*fade,wd=aR.y*(1.+d*.020),c=cos(aR.z),s=sin(aR.z);
-  vec3 l=vec3(position.x*wd*c,t*hg,position.x*wd*s);
+  vec3 l=vec3(position.x*wd*c-position.z*hg*s,t*hg,position.x*wd*s+position.z*hg*c);
   float gust=nn(g*.035+vec2(uT*.30,uT*.13)),tur=nn(g*.4+vec2(uT*.85,-uT*.5));
   float amp=(gust*.9+tur*.35-.16+.1*sin(uT*2.2+ph*6.28))/stf;
   float bend=amp*t*t*hg*.53;
@@ -59,5 +59,8 @@ const GM=new T.ShaderMaterial({uniforms:U,side:T.DoubleSide,
  fragmentShader:`uniform vec3 uFog;varying vec3 vC;varying float vF;
  void main(){gl_FragColor=vec4(mix(vC,uFog,vF),1.);`+DISPLAY+`}`
 });
-const BL=new T.BufferGeometry();BL.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.42,.34,0,.42,.34,0,-.24,.68,0,.24,.68,0,0,1,0]),3));BL.setIndex([0,1,2,1,3,2,2,3,4,3,5,4,4,5,6]);
-const BL2=new T.BufferGeometry();BL2.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.3,.5,0,.3,.5,0,0,1,0]),3));BL2.setIndex([0,1,2,1,3,2,2,3,4]);
+// Blades are curved, not straight: z carries the forward sweep of a circular
+// arc and the shader folds it into the blade's own azimuth. Same vertex and
+// triangle budget as the old flat strip.
+const BL=new T.BufferGeometry();BL.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.42,.390,.0584,.42,.390,.0584,-.24,.764,.2417,.24,.764,.2417,0,1,.4526]),3));BL.setIndex([0,1,2,1,3,2,2,3,4,3,5,4,4,5,6]);
+const BL2=new T.BufferGeometry();BL2.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.3,.5477,.1183,.3,.5477,.1183,0,1,.4526]),3));BL2.setIndex([0,1,2,1,3,2,2,3,4]);

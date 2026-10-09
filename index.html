@@ -389,7 +389,7 @@ const GM=new T.ShaderMaterial({uniforms:U,side:T.DoubleSide,
   float d=distance(wp,cameraPosition),fade=1.-smoothstep(uFar*.6,uFar,d);
   float t=position.y,ph=hh(aP.xz),stf=.6+.8*hh(aP.zx+3.);
   float hg=aR.x*fade,wd=aR.y*(1.+d*.020),c=cos(aR.z),s=sin(aR.z);
-  vec3 l=vec3(position.x*wd*c,t*hg,position.x*wd*s);
+  vec3 l=vec3(position.x*wd*c-position.z*hg*s,t*hg,position.x*wd*s+position.z*hg*c);
   float gust=nn(g*.035+vec2(uT*.30,uT*.13)),tur=nn(g*.4+vec2(uT*.85,-uT*.5));
   float amp=(gust*.9+tur*.35-.16+.1*sin(uT*2.2+ph*6.28))/stf;
   float bend=amp*t*t*hg*.53;
@@ -410,8 +410,11 @@ const GM=new T.ShaderMaterial({uniforms:U,side:T.DoubleSide,
  fragmentShader:`uniform vec3 uFog;varying vec3 vC;varying float vF;
  void main(){gl_FragColor=vec4(mix(vC,uFog,vF),1.);`+DISPLAY+`}`
 });
-const BL=new T.BufferGeometry();BL.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.42,.34,0,.42,.34,0,-.24,.68,0,.24,.68,0,0,1,0]),3));BL.setIndex([0,1,2,1,3,2,2,3,4,3,5,4,4,5,6]);
-const BL2=new T.BufferGeometry();BL2.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.3,.5,0,.3,.5,0,0,1,0]),3));BL2.setIndex([0,1,2,1,3,2,2,3,4]);
+// Blades are curved, not straight: z carries the forward sweep of a circular
+// arc and the shader folds it into the blade's own azimuth. Same vertex and
+// triangle budget as the old flat strip.
+const BL=new T.BufferGeometry();BL.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.42,.390,.0584,.42,.390,.0584,-.24,.764,.2417,.24,.764,.2417,0,1,.4526]),3));BL.setIndex([0,1,2,1,3,2,2,3,4,3,5,4,4,5,6]);
+const BL2=new T.BufferGeometry();BL2.setAttribute('position',new T.BufferAttribute(new Float32Array([-.5,0,0,.5,0,0,-.3,.5477,.1183,.3,.5477,.1183,0,1,.4526]),3));BL2.setIndex([0,1,2,1,3,2,2,3,4]);
 
 /* ---------- water engine v2: one material pass, no reflection render target ---------- */
 // A centimetre-scale VISUAL surface. Physics always keeps the original WL and H.
@@ -593,7 +596,7 @@ function* genGrass(c){const tier=c.tier=tierOf(c);c.gq=qm;const want=Math.floor(
   if(s<.4){hg=1.5+rng()*1.2;w=.07;dry=.1+.3*rng()}else if(m>.55){hg=.8+rng()*.8;dry=.15+rng()*.4}else{hg=.55+rng()*.85;dry=.6+rng()*.4}
   if(sml<.35)hg*=.45;if(big<.3&&s>.4){dry=.85+rng()*.15;hg*=.55}
   const nb=s<.4?3:5+(rng()*4|0),rad=.1+hg*.12;
-  for(let q=0;q<nb&&k<want;q++){const a=rng()*6.283,rr=rad*Math.sqrt(rng()),bx=lx+Math.cos(a)*rr,bz=lz+Math.sin(a)*rr;
+  for(let q=0;q<nb&&k<want;q++){const a=rng()*6.283,rr=rad*Math.pow(rng(),.62),bx=lx+Math.cos(a)*rr,bz=lz+Math.sin(a)*rr;
    aP.set([bx,samp(c.eg,cl(bx,0,CS),cl(bz,0,CS))-.03,bz],k*3);aR.set([hg*(.7+.5*rng()),w,rng()*6.283,cl(dry+(rng()-.5)*.25)],k*4);k++}}
  if(!k){drop();return}
  const bl=tier===3?BL:BL2,g=new T.InstancedBufferGeometry();g.index=bl.index.clone();g.setAttribute('position',bl.attributes.position.clone());
