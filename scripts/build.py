@@ -37,8 +37,14 @@ const PDG_LO=new T.SphereGeometry(1,8,5);
 // The base stays within the collision radius the simulation already uses.
 function trunkGeometry(){const pts=[];for(let i=0;i<=6;i++){const y=i/6;pts.push(new T.Vector2(.62+1.03*Math.exp(-y*5.2),y))}const g=new T.LatheGeometry(pts,9);g.computeVertexNormals();return g}
 const TRT=trunkGeometry();
+// Baobabs are a flared barrel that narrows abruptly at the shoulder. The base
+// is capped at 1.10: collisions hold the player at .95*r+.35, and 1.10*r stays
+// inside that for the whole generated radius range of 1.1 to 2.0.
+function baobabGeometry(){const pts=[];for(let i=0;i<=7;i++){const y=i/7;pts.push(new T.Vector2(Math.max(.30,.55+.55*Math.exp(-y*2.2)-.28*Math.pow(y,6)),y))}const g=new T.LatheGeometry(pts,12);g.computeVertexNormals();return g}
+const TRB_BAOBAB=baobabGeometry();
 const TRG=new T.CylinderGeometry''')
 replace('PDG=jit(new T.SphereGeometry(1,9,5))','PDG=canopyGeometry()')
+replace('TRB=new T.CylinderGeometry(.8,1,1,12,1,false).translate(0,.5,0)','TRB=TRB_BAOBAB')
 replace('add(PDG,pd,true', 'add(lo?PDG_LO:PDG,pd,true')
 # The old palette was authored as display colour. Decode albedo before ACES,
 # rather than washing the original ochre soil into a white surface.

@@ -550,7 +550,12 @@ const PDG_LO=new T.SphereGeometry(1,8,5);
 // The base stays within the collision radius the simulation already uses.
 function trunkGeometry(){const pts=[];for(let i=0;i<=6;i++){const y=i/6;pts.push(new T.Vector2(.62+1.03*Math.exp(-y*5.2),y))}const g=new T.LatheGeometry(pts,9);g.computeVertexNormals();return g}
 const TRT=trunkGeometry();
-const TRG=new T.CylinderGeometry(.5,1,1,8,1,false).translate(0,.5,0),TRB=new T.CylinderGeometry(.8,1,1,12,1,false).translate(0,.5,0),PDG=canopyGeometry(),CAG=jit(new T.SphereGeometry(1,10,6)),RKG=jit(new T.IcosahedronGeometry(1,1));
+// Baobabs are a flared barrel that narrows abruptly at the shoulder. The base
+// is capped at 1.10: collisions hold the player at .95*r+.35, and 1.10*r stays
+// inside that for the whole generated radius range of 1.1 to 2.0.
+function baobabGeometry(){const pts=[];for(let i=0;i<=7;i++){const y=i/7;pts.push(new T.Vector2(Math.max(.30,.55+.55*Math.exp(-y*2.2)-.28*Math.pow(y,6)),y))}const g=new T.LatheGeometry(pts,12);g.computeVertexNormals();return g}
+const TRB_BAOBAB=baobabGeometry();
+const TRG=new T.CylinderGeometry(.5,1,1,8,1,false).translate(0,.5,0),TRB=TRB_BAOBAB,PDG=canopyGeometry(),CAG=jit(new T.SphereGeometry(1,10,6)),RKG=jit(new T.IcosahedronGeometry(1,1));
 const IDX=new Uint16Array(SEG*SEG*6);
 {let q=0;for(let j=0;j<SEG;j++)for(let i=0;i<SEG;i++){const k=j*N+i;IDX.set([k,k+N,k+1,k+1,k+N,k+N+1],q);q+=6}}
 /* ---------- chunk streaming ---------- */
@@ -742,7 +747,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  /* every tree draws from its own seeded stream, so layout never depends on LOD */
  const tree=(x,e,z,ty,u)=>{tr=rngf(Math.floor(x*64),Math.floor(z*64),55);const a=tr()*6.28;cs+=x+z;
   if(ty===1){const r=1.1+tr()*.9,Hh=4.5+tr()*3.5;bk.push([x,e-.3,z,r,Hh,(tr()-.5)*.05,a,[.46,.40,.34]]);
-   for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:2,[.42,.37,.31],0,0);col.push([x,z,r*.95,1e9]);return}
+   for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:1,[.42,.37,.31],[.155,.19,.072],.95);col.push([x,z,r*.95,1e9]);return}
   const dead=ty===2,R=.14+.14*tr(),h1=1.4+tr()*1.2,t1=.1+tr()*.22,h2=1.2+tr()*1.4,cc=dead?[.07,.055,.05]:[.20,.15,.11],lf=dead?0:[.19+.07*u,.25+.07*u,.07+.03*u];
   const p=br(x,e-.1,z,R,h1,t1,a,0,cc,0,0,1),q=br(p[0],p[1],p[2],R*.62,h2,-t1*(.5+tr()),a,0,cc,0,0),n=3+(tr()*2|0),pr=1.5+tr()*1.1;
   for(let i=0;i<n;i++)br(q[0],q[1],q[2],R*.42,dead?1.5+tr()*1.4:1.75+tr()*1.7,dead?.35+tr()*.7:.95+tr()*.45,a+i*(6.28/n)+tr()*.6,lo?0:dead?2:1,cc,lf,pr);
