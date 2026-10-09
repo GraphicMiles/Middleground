@@ -26,7 +26,10 @@ def region(start,end,text):
 region('const U={','const GN=',(source/'environment.js').read_text())
 region('/* sky */','/* terrain material:',(source/'sky.js').read_text())
 region('/* terrain material:','/* shared prop geometry */','const GROUND_TEXTURES='+ ground_textures+';\n'+(source/'ground.js').read_text()+'\n'+(source/'materials.js').read_text()+'\n'+(source/'water.js').read_text())
-replace('const TRG=new T.CylinderGeometry', '''function canopyGeometry(){const g=new T.SphereGeometry(1,14,9),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.93+.14*vn(x*2.5+33.4,z*2.5+y*1.7,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
+replace('const TRG=new T.CylinderGeometry', '''// A crown reads as a cluster of foliage lobes, not a smooth ellipsoid, so the
+// displacement is strong and low frequency: that is what puts gaps and
+// unevenness into the silhouette instead of one rounded blob.
+function canopyGeometry(){const g=new T.SphereGeometry(1,14,9),p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),f=.62+.52*vn(x*1.25+33.4,z*1.25+y*1.05,185);p.setXYZ(i,x*f,y*f,z*f)}g.computeVertexNormals();return g}
 const PDG_LO=new T.SphereGeometry(1,8,5);
 const TRG=new T.CylinderGeometry''')
 replace('PDG=jit(new T.SphereGeometry(1,9,5))','PDG=canopyGeometry()')
