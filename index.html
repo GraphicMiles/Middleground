@@ -745,8 +745,8 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
    for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:2,[.42,.37,.31],0,0);col.push([x,z,r*.95,1e9]);return}
   const dead=ty===2,R=.14+.14*tr(),h1=1.4+tr()*1.2,t1=.1+tr()*.22,h2=1.2+tr()*1.4,cc=dead?[.07,.055,.05]:[.20,.15,.11],lf=dead?0:[.19+.07*u,.25+.07*u,.07+.03*u];
   const p=br(x,e-.1,z,R,h1,t1,a,0,cc,0,0,1),q=br(p[0],p[1],p[2],R*.62,h2,-t1*(.5+tr()),a,0,cc,0,0),n=3+(tr()*2|0),pr=1.5+tr()*1.1;
-  for(let i=0;i<n;i++)br(q[0],q[1],q[2],R*.42,1.5+tr()*1.4,dead?.35+tr()*.7:.5+tr()*.45,a+i*(6.28/n)+tr()*.6,lo?0:dead?2:1,cc,lf,pr);
-  if(lf)pd.push([q[0],q[1]+.5,q[2],pr*1.1,tr()*6.28,lf]);col.push([x,z,R+.2,1e9])};
+  for(let i=0;i<n;i++)br(q[0],q[1],q[2],R*.42,dead?1.5+tr()*1.4:1.75+tr()*1.7,dead?.35+tr()*.7:.95+tr()*.45,a+i*(6.28/n)+tr()*.6,lo?0:dead?2:1,cc,lf,pr);
+  if(lf)pd.push([q[0],q[1]+.18,q[2],pr*.72,tr()*6.28,lf]);col.push([x,z,R+.2,1e9])};
  for(let i=0;i<4;i++){for(let j=0;j<4;j++){const x=x0+(i+rng())*16,z=z0+(j+rng())*16,e=H(x,z),s=e-WL,m=Mo(x,z,e),q=vn(x/150,z/150,11)*.7+vn(x/38,z/38,12)*.3,p=(q>.6?.5:q>.5?.14:.025)*(s>.6?1:0)*(m>.3?1:.5),a=rng(),b=rng(),d=rng();
   if(a<p)tree(x,e,z,b<.05&&m<.55?1:0,d)}yield}
  for(let i=0;i<3;i++)for(let j=0;j<3;j++){const x=x0+(i+rng())*21,z=z0+(j+rng())*21,e=H(x,z),s=e-WL,a=rng();if(a<.5&&s>.25&&cmask(x,z,s)>.35)tree(x,e,z,2,0)}
