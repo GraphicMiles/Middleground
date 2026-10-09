@@ -59,7 +59,7 @@ replace("g.setAttribute('aM',new T.BufferAttribute(am,1));", "g.setAttribute('aM
 replace('const t=new T.Mesh(g,TM);t.receiveShadow=true;', 'const t=new T.Mesh(g,TM);t.receiveShadow=true;t.userData.ground=true;')
 replace('c.eg=eg;c.mg=mg;c.cs=cs;', 'c.soilInfo=soilInfo;c.eg=eg;c.mg=mg;c.cs=cs;')
 
-replace('f(a);D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)', 'f(a);if(mat===MT)co.convertSRGBToLinear();D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)')
+replace('f(a);D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)', 'f(a);if(mat===MT||mat===MR)co.convertSRGBToLinear();D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)')
 # Cached water-side data uses the same padded terrain heights at chunk borders.
 replace('soilInfo=new Float32Array(N*N*4);let cs=0;', 'soilInfo=new Float32Array(N*N*4),waterInfo=new Float32Array(N*N*2);let cs=0;')
 replace('eg[k]=e;mg[k]=m;dp[k]=WL-e;am[k]=cmask(x,z,e-WL);cs+=e*(k%7+1)', 'eg[k]=e;mg[k]=m;dp[k]=WL-e;am[k]=cmask(x,z,e-WL);waterInfo[k*2]=cl(.30+.52*m+.18*sm(.1,1.2,dp[k]));waterInfo[k*2+1]=sm(.025,.9,WL-Math.max(e,hp[q-1],hp[q+1],hp[q-PN],hp[q+PN]));cs+=e*(k%7+1)')

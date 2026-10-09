@@ -4,9 +4,9 @@ const SWAY=`vec4 wq=modelMatrix*instanceMatrix*vec4(transformed,1.);
  vec2 sd=uWind*(gs*.75+ts*.30-.12)*.32*hs;
  wq.xz+=sd;wq.y-=length(sd)*.12;
  vec4 mvPosition=viewMatrix*wq;gl_Position=projectionMatrix*mvPosition;`;
-const mkMT=(sw,leaf=false)=>{
+const mkMT=(sw,leaf=false,rock=false)=>{
  const m=new T.MeshLambertMaterial({color:0xffffff});
- m.customProgramCacheKey=()=>leaf?'canopy-v2':sw?'wood-sway-v2':'props-v2';
+ m.customProgramCacheKey=()=>leaf?'canopy-v2':sw?'wood-sway-v2':rock?'rock-v1':'props-v2';
  m.onBeforeCompile=s=>{
   s.uniforms.uOrg=U.uOrg;s.uniforms.uT=U.uT;s.uniforms.uWind=U.uWind;
   let vs=s.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vP;uniform vec2 uOrg;'+(sw?'uniform float uT;uniform vec2 uWind;'+GN:''))
@@ -14,12 +14,13 @@ const mkMT=(sw,leaf=false)=>{
   if(sw)vs=vs.replace('#include <project_vertex>',SWAY);s.vertexShader=vs;
   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vP;uniform float uT;'+GN+CLD)
   .replace('#include <color_fragment>','#include <color_fragment>\n'+(leaf?
-   'float leafDetail=nn(vP.xz*3.6+vP.y*4.2);diffuseColor.rgb*=.79+.30*leafDetail;diffuseColor.rgb+=vec3(.012,.022,.002)*nn(vP.xz*8.+vP.y*5.);':
+   'float leafDetail=nn(vP.xz*3.6+vP.y*4.2);diffuseColor.rgb*=.79+.30*leafDetail;diffuseColor.rgb+=vec3(.012,.022,.002)*nn(vP.xz*8.+vP.y*5.);':rock?
+   'float mottle=nn(vP.xz*1.9+vP.y*1.3),grit=nn(vec2(vP.x*7.3+vP.y*5.1,vP.z*7.3-vP.y*4.7));diffuseColor.rgb*=(.74+.36*mottle)*(.87+.21*grit);':
    'float bark=nn(vec2((vP.x+vP.z)*14.,vP.y*.9));diffuseColor.rgb*=(.80+.28*nn(vP.xz*2.1+vP.y*1.2))*(.90+.16*bark);')+'\ndiffuseColor.rgb*=cld(vP.xz,uT);');
  };
  return m;
 };
-const MT=mkMT(false),MTS=mkMT(true),LM=mkMT(true,true);
+const MT=mkMT(false),MTS=mkMT(true),LM=mkMT(true,true),MR=mkMT(false,false,true);
 // Matching wind in the shadow pass prevents detached tree shadows.
 const treeDepth=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking});
 treeDepth.onBeforeCompile=s=>{

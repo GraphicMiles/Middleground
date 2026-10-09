@@ -188,7 +188,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  add(lo?TRG:TRT,tt,true,cyl,MTS);add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;
  add(PDG,pd,true,a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[3]*.46,a[3]);D.rotation.y=a[4];co.setRGB(...a[5])},MTS);yield;
  add(CAG,bu,false,a=>{const r=a[3],v=a[4];D.position.set(a[0]-x0,a[1]+r*.3,a[2]-z0);D.scale.set(r,r*.75,r);D.rotation.y=a[0];co.setRGB(.2+.3*v*v,.22+.2*v*v,.08+.04*v)},MT);
- add(RKG,ro,true,a=>{const r=a[3],f=a[8]*6.283;D.position.set(a[0]-x0,a[1]+r*(.12-a[7]),a[2]-z0);D.scale.set(r*(.86+.28*Math.sin(f)),r*(.52+.22*Math.sin(f+2.1)),r*(.72+.24*Math.sin(f+4.2)));D.rotation.set(a[5],a[4],a[6]);const v=.8+.4*a[4]/6.28;co.setRGB(.46*v,.37*v,.29*v)},MT);
+ add(RKG,ro,true,a=>{const r=a[3],f=a[8]*6.283;D.position.set(a[0]-x0,a[1]+r*(.12-a[7]),a[2]-z0);D.scale.set(r*(.86+.28*Math.sin(f)),r*(.52+.22*Math.sin(f+2.1)),r*(.72+.24*Math.sin(f+4.2)));D.rotation.set(a[5],a[4],a[6]);const v=.8+.4*a[4]/6.28;co.setRGB(.46*v,.37*v,.29*v)},MR);
  for(const m of c.pm||[]){world.remove(m);m.dispose&&m.dispose();const i=c.meshes.indexOf(m);if(i>=0)c.meshes.splice(i,1)}
  c.pm=made;for(const m of made){c.meshes.push(m);world.add(m)}c.col=col;c.bq=bq;c.cs=cs;place(c);
  if(!c.pDone){c.pDone=1;const old=seen.get(c.key);if(old===undefined)seen.set(c.key,c.cs);else{regen++;if(old!==c.cs)mism++}}}
