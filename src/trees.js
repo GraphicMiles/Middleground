@@ -15,7 +15,7 @@
 
 /* Append a tube (ring per section) for one branch into the chunk buffers. */
 function tubeInto(env,secs,cc){
- const SEG=6;
+ const SEG=env.seg||6;
  const base=env.bv.length/3;
  for(let s=0;s<secs.length;s++){
   const sc=secs[s],p=[sc[0],sc[1],sc[2]],r=sc[3],d=[sc[4],sc[5],sc[6]];
@@ -135,7 +135,7 @@ function addLeaf(tr,env,x,y,z,size,col){
  }
 }
 function leafCluster(tr,env,x,y,z,rad,lf,lo){
- const cards=lo?6:28;
+ const cards=lo?6:40;
  for(let i=0;i<cards;i++){
   const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
   addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:.5)+tr()*.3,lf);
@@ -143,4 +143,9 @@ function leafCluster(tr,env,x,y,z,rad,lf,lo){
 }
 const MT_LEAF=mkMT(true,true);
 MT_LEAF.vertexColors=true;MT_LEAF.side=T.DoubleSide;MT_LEAF.map=LEAF;MT_LEAF.alphaTest=.5;
+{const ob=MT_LEAF.onBeforeCompile;MT_LEAF.onBeforeCompile=sh=>{ob&&ob(sh);
+ sh.uniforms.uSun=U.uSun;
+ sh.fragmentShader=sh.fragmentShader
+  .replace('#include <common>','#include <common>\nuniform vec3 uSun;')
+  .replace('#include <opaque_fragment>','outgoingLight+=uSun*pow(clamp(dot(normalize(vNormal),-normalize(uSun)),0.,1.),2.)*.5*diffuseColor.rgb;\n#include <opaque_fragment>');};}
 MT_LEAF.customProgramCacheKey=()=>'leaf-card-vc-v1';
