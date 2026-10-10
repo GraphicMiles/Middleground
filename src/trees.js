@@ -65,7 +65,7 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
  const sv=vn(x*.131+9.7,z*.171-3.1,777);
  const sp=dead?0:(sv<.45?0:sv<.80?1:2);
  const SP=[[1.0,1.0,1.0,0,.07],[1.30,.85,1.15,0,.01],[.72,1.15,.80,2,.10]][sp];
- const h1=(1.4+tr()*1.2)*SP[2],t1=.1+tr()*.22,h2=(1.2+tr()*1.4)*SP[2],t2=-t1*(.5+tr());
+ const h1=(1.4+tr()*1.2)*SP[2]*1.2,t1=.1+tr()*.22,h2=(1.2+tr()*1.4)*SP[2]*1.2,t2=-t1*(.5+tr());
  const cc=dead?[.35,.30,.26]:[.62,.52,.42];
  const LC=[[.30,.38,.10],[.16,.26,.07],[.28,.32,.15]][sp];
  const lf=dead?0:[LC[0]*(.85+.30*u),LC[1]*(.85+.30*u),LC[2]*(.85+.30*u)];
@@ -84,10 +84,10 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
   const side=[Math.cos(ang),0,Math.sin(ang)];
   const pitch=dead?.9:.75+.35*spread;
   let nd=nrm([q.dir[0]*.4+side[0]*pitch,q.dir[1]*.4+(dead?.25:lift*.5),q.dir[2]*.4+side[2]*pitch]);
-  const L=dead?1.5+tr()*1.4:(1.75+tr()*1.7)*spread*lops;
+  const L=dead?1.5+tr()*1.4:(1.75+tr()*1.7)*spread*lops*1.1;
   const limb=growChain(tr,env,q.end.slice(0,3),nd,q.end[3]*.7,L,lo?1:2,.62,.10,dead?-.02:.03+SP[4],cc,lo?tips:null,pr);
-  if(!lo&&!dead)for(let w=0;w<2;w++){
-   const wa=ang+(w?1:-1)*.7;const ws=[Math.cos(wa),0,Math.sin(wa)];
+  if(!lo&&!dead)for(let w=0;w<3;w++){
+   const wa=ang+(w-1)*.7;const ws=[Math.cos(wa),0,Math.sin(wa)];
    let wd=nrm([limb.dir[0]+ws[0]*.5,limb.dir[1]+.25+SP[4],limb.dir[2]+ws[2]*.5]);
    growChain(tr,env,limb.end.slice(0,3),wd,limb.end[3]*.7,L*.5,1,.6,.12,.05+SP[4],cc,tips,pr*.8);
   }
@@ -135,10 +135,10 @@ function addLeaf(tr,env,x,y,z,size,col){
  }
 }
 function leafCluster(tr,env,x,y,z,rad,lf,lo){
- const cards=lo?4:18;
+ const cards=lo?6:28;
  for(let i=0;i<cards;i++){
   const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
-  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.62:.5)+tr()*.3,lf);
+  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:.5)+tr()*.3,lf);
  }
 }
 const MT_LEAF=mkMT(true,true);
