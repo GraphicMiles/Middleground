@@ -97,3 +97,33 @@ const MT_BRANCH=mkMT(true);
 MT_BRANCH.vertexColors=true;
 MT_BRANCH.side=T.DoubleSide;
 MT_BRANCH.customProgramCacheKey=()=>'wood-branch-vc-v1';
+
+/* ---- 6b: foliage as small crossed leaf cards clustered at twig tips ----
+   Replaces the solid ellipsoid puffs (the main blob) with many small cards so
+   the crown has gaps and a frayed silhouette. Technique as ez-tree (leaf cards
+   on outer skeleton, stratified), own code. */
+function addLeaf(tr,env,x,y,z,size,col){
+ for(let q=0;q<2;q++){
+  const yaw=tr()*6.283,pit=(tr()-.5)*1.4+q*1.5708;
+  const ca=Math.cos(yaw),sa=Math.sin(yaw),cp=Math.cos(pit),sp=Math.sin(pit);
+  const base=env.lv.length/3,cs=[[-.5,0,0],[.5,0,0],[.5,1,0],[-.5,1,0]];
+  for(const c of cs){
+   const X=c[0]*size,Y=c[1]*size;
+   const Y2=Y*cp,Z2=Y*sp;
+   const X3=X*ca+Z2*sa,Z3=-X*sa+Z2*ca;
+   env.lv.push(x-env.x0+X3,y+Y2,z-env.z0+Z3);env.ln.push(0,1,0);
+   const sh=.8+tr()*.4;env.lc.push(col[0]*sh,col[1]*sh,col[2]*sh);
+  }
+  env.li.push(base,base+1,base+2,base,base+2,base+3);
+ }
+}
+function leafCluster(tr,env,x,y,z,rad,lf,lo){
+ const cards=lo?4:14;
+ for(let i=0;i<cards;i++){
+  const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
+  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.62:.5)+tr()*.3,lf);
+ }
+}
+const MT_LEAF=mkMT(true,true);
+MT_LEAF.vertexColors=true;MT_LEAF.side=T.DoubleSide;
+MT_LEAF.customProgramCacheKey=()=>'leaf-card-vc-v1';
