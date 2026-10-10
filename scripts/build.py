@@ -77,8 +77,9 @@ replace('im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;made.push(im)
 replace('co.setRGB(...a[5])},MTS);yield;', 'co.setRGB(...a[5])},LM);addCanopyLeaves(pd,x0,z0,made,lo);yield;')
 replace('c.pm=made;for(const m of made)', 'c.crowns=pd;c.pm=made;for(const m of made)')
 # ---- Pass 6a: our own curved/tapered branch skeleton for generic + dead trees ----
-replace("tpos=[],lo=c.lo=wantLo(c);","tpos=[],bv=[],bn=[],bi=[],bc=[],buv=[],lv=[],ln=[],li=[],lc=[],luv=[],hi=c.d<=1,seg=c.d<=1?10:(c.d===2?8:6),lo=c.lo=wantLo(c);")
-NEW_TREE = """ const st=savannahTree(tr,{bv,bn,bi,bc,buv,lv,ln,li,lc,luv,x0,z0,seg,hi},x,e,z,u,lo,ty===2);
+replace("tpos=[],lo=c.lo=wantLo(c);","tpos=[],bv=[],bn=[],bi=[],bc=[],buv=[],lv=[],ln=[],li=[],lc=[],luv=[],hi=c.d<=1,seg=c.d<=1?10:(c.d===2?8:6),lo=c.lo=wantLo(c);let supLeft=c.d===0?2:0;")
+NEW_TREE = """ const sup=ty===0&&supLeft>0&&((x-P.x)*(x-P.x)+(z-P.z)*(z-P.z))<324;if(sup)supLeft--;
+ const st=savannahTree(tr,{bv,bn,bi,bc,buv,lv,ln,li,lc,luv,x0,z0,seg,hi,sup},x,e,z,u,lo,ty===2);
  if(st.lf)for(const tp of st.tips)leafCluster(tr,{lv,ln,li,lc,luv,x0,z0},tp[0],tp[1],tp[2],tp[3],st.lf,lo);
  col.push([x,z,st.R+.2,1e9]);tpos.push([x,z,st.R,st.pr])};"""
 i6=s.index("  const dead=ty===2,R=");j6=s.index("tpos.push([x,z,R,pr])};",i6)+len("tpos.push([x,z,R,pr])};")
