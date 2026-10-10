@@ -691,8 +691,9 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
   let nd=nrm([q.dir[0]*.4+side[0]*pitch,q.dir[1]*.4+(dead?.25:lift*.5),q.dir[2]*.4+side[2]*pitch]);
   const L=dead?1.5+tr()*1.4:(1.75+tr()*1.7)*spread*lops*1.1;
   const limb=growChain(tr,env,q.end.slice(0,3),nd,q.end[3]*.7,L,lo?1:2,.62,.10,dead?-.02:.03+SP[4],cc,lo?tips:null,pr);
-  if(!lo&&!dead)for(let w=0;w<3;w++){
-   const wa=ang+(w-1)*.7;const ws=[Math.cos(wa),0,Math.sin(wa)];
+  if(!lo&&!dead)tips.push([limb.end[0],limb.end[1],limb.end[2],pr*.85,tr()*6.28]);
+  if(!lo&&!dead)for(let w=0;w<4;w++){
+   const wa=ang+(w-1.5)*.6;const ws=[Math.cos(wa),0,Math.sin(wa)];
    let wd=nrm([limb.dir[0]+ws[0]*.5,limb.dir[1]+.25+SP[4],limb.dir[2]+ws[2]*.5]);
    growChain(tr,env,limb.end.slice(0,3),wd,limb.end[3]*.7,L*.5,1,.6,.12,.05+SP[4],cc,tips,pr*.8);
   }
