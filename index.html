@@ -65,7 +65,7 @@ const zone=(x,z)=>{const e=H(x,z),m=Mo(x,z,e);return e<WL+.3?'water edge / reeds
 /* ---------- renderer / scene ---------- */
 const cv=$('c'),ren=new T.WebGLRenderer({canvas:cv,antialias:(devicePixelRatio||1)<2,powerPreference:'high-performance'});
 let pr=Math.min(devicePixelRatio||1,1.5);ren.setPixelRatio(pr);ren.setSize(innerWidth,innerHeight);
-ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;
+ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=1.1;ren.outputColorSpace=T.SRGBColorSpace;
 const scene=new T.Scene(),cam=new T.PerspectiveCamera(70,innerWidth/innerHeight,.1,1200);cam.rotation.order='YXZ';
 scene.fog=new T.FogExp2(0xbdc9c6,.0046);const world=new T.Group();scene.add(world);
 /* ---------- clean, single-pass colour management ---------- */
@@ -635,6 +635,7 @@ function tubeInto(env,secs,cc){
    env.bv.push(p[0]-env.x0+nx*r,p[1]+ny*r,p[2]-env.z0+nz*r);
    env.bn.push(nx,ny,nz);
    env.bc.push(cc[0],cc[1],cc[2]);
+   env.buv.push(k/SEG,s*.5);
   }
  }
  for(let s=0;s<secs.length-1;s++)for(let k=0;k<SEG;k++){
@@ -670,7 +671,7 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
  const sp=dead?0:(sv<.45?0:sv<.80?1:2);
  const SP=[[1.0,1.0,1.0,0,.07],[1.30,.85,1.15,0,.01],[.72,1.15,.80,2,.10]][sp];
  const h1=(1.4+tr()*1.2)*SP[2],t1=.1+tr()*.22,h2=(1.2+tr()*1.4)*SP[2],t2=-t1*(.5+tr());
- const cc=dead?[.07,.055,.05]:[.20,.15,.11];
+ const cc=dead?[.35,.30,.26]:[.62,.52,.42];
  const LC=[[.30,.38,.10],[.16,.26,.07],[.28,.32,.15]][sp];
  const lf=dead?0:[LC[0]*(.85+.30*u),LC[1]*(.85+.30*u),LC[2]*(.85+.30*u)];
  const spread=(.78+.44*u)*SP[0],lift=(.78+.40*u)*SP[1],leanA=tr()*6.28;
@@ -703,8 +704,18 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
 /* Branch tube material: vertex-coloured so each tree keeps its own tint,
    double-sided, and its own program cache key (it differs from MTS by
    vertexColors, so it must not share MTS's cached program). */
+/* ---- 6d: procedural bark + leaf-alpha textures (canvas, no network) ---- */
+function _ct(sz,fn){const c=document.createElement('canvas');c.width=c.height=sz;fn(c.getContext('2d'),sz);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t}
+const BARK=_ct(128,(g,s)=>{g.fillStyle='#8a7358';g.fillRect(0,0,s,s);
+ for(let i=0;i<240;i++){const sh=Math.random();g.fillStyle=`rgba(${60+sh*70|0},${48+sh*55|0},${34+sh*40|0},${.2+Math.random()*.4})`;g.fillRect(Math.random()*s,0,1+Math.random()*3,s)}
+ for(let i=0;i<500;i++){g.fillStyle=`rgba(30,22,14,${Math.random()*.35})`;g.fillRect(Math.random()*s,Math.random()*s,1+Math.random()*2,2+Math.random()*7)}});
+BARK.wrapS=BARK.wrapT=T.RepeatWrapping;
+const LEAF=_ct(64,(g,s)=>{g.clearRect(0,0,s,s);g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.moveTo(s/2,s-2);g.lineTo(s/2,4);g.stroke();
+ for(let i=0;i<7;i++){const y=8+i*7,ln=4+(i<4?i*2.4:(6-i)*2.4);
+  for(const q of[-1,1]){g.fillStyle='#fff';g.beginPath();g.ellipse(s/2+q*ln,y,ln*.9,3,q*.5,0,7);g.fill()}}});
+const LEAF_DEPTH=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,map:LEAF,alphaTest:.5});
 const MT_BRANCH=mkMT(true);
-MT_BRANCH.vertexColors=true;
+MT_BRANCH.vertexColors=true;MT_BRANCH.map=BARK;
 MT_BRANCH.side=T.DoubleSide;
 MT_BRANCH.customProgramCacheKey=()=>'wood-branch-vc-v1';
 
@@ -723,19 +734,20 @@ function addLeaf(tr,env,x,y,z,size,col){
    const X3=X*ca+Z2*sa,Z3=-X*sa+Z2*ca;
    env.lv.push(x-env.x0+X3,y+Y2,z-env.z0+Z3);env.ln.push(0,1,0);
    const sh=.8+tr()*.4;env.lc.push(col[0]*sh,col[1]*sh,col[2]*sh);
+   env.luv.push(c[0]+.5,c[1]);
   }
   env.li.push(base,base+1,base+2,base,base+2,base+3);
  }
 }
 function leafCluster(tr,env,x,y,z,rad,lf,lo){
- const cards=lo?4:14;
+ const cards=lo?4:18;
  for(let i=0;i<cards;i++){
   const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
   addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.62:.5)+tr()*.3,lf);
  }
 }
 const MT_LEAF=mkMT(true,true);
-MT_LEAF.vertexColors=true;MT_LEAF.side=T.DoubleSide;
+MT_LEAF.vertexColors=true;MT_LEAF.side=T.DoubleSide;MT_LEAF.map=LEAF;MT_LEAF.alphaTest=.5;
 MT_LEAF.customProgramCacheKey=()=>'leaf-card-vc-v1';
 
 /* ---------- water plants: independent seed stream; never alter terrain or props ---------- */
@@ -879,7 +891,7 @@ function* genAquatic(c){
  for(const m of made){c.meshes.push(m);world.add(m)}place(c);
 }
 
-function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],tt=[],bk=[],pd=[],col=[],bq=[],tpos=[],bv=[],bn=[],bi=[],bc=[],lv=[],ln=[],li=[],lc=[],lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
+function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],tt=[],bk=[],pd=[],col=[],bq=[],tpos=[],bv=[],bn=[],bi=[],bc=[],buv=[],lv=[],ln=[],li=[],lc=[],luv=[],lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
  const br=(x,y,z,r,len,t,a,d,cc,lf,pr,root)=>{(root?tt:tk).push([x,y,z,r,len,t,a,cc]);const ex=x+Math.sin(t)*Math.sin(a)*len,ey=y+Math.cos(t)*len,ez=z+Math.sin(t)*Math.cos(a)*len;
   if(d>0){const n=2+(tr()<.35?1:0);for(let i=0;i<n;i++)br(ex,ey,ez,r*.6,len*(.62+.25*tr()),Math.min(1.45,t+(lf?.15+tr()*.5:-.1+tr()*.45)),a+(i-(n-1)/2)*1.5+(tr()-.5)*.6,d-1,cc,lf,pr)}
   else if(lf)pd.push([ex,ey,ez,pr*(.75+.5*tr()),tr()*6.28,lf]);return[ex,ey,ez]};
@@ -887,8 +899,8 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  const tree=(x,e,z,ty,u)=>{tr=rngf(Math.floor(x*64),Math.floor(z*64),55);const a=tr()*6.28;cs+=x+z;
   if(ty===1){const r=1.1+tr()*.9,Hh=4.5+tr()*3.5;bk.push([x,e-.3,z,r,Hh,(tr()-.5)*.05,a,[.46,.40,.34]]);
    for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:1,[.42,.37,.31],[.155,.19,.072],.95);col.push([x,z,r*.95,1e9]);tpos.push([x,z,r,r*.9]);return}
- const st=savannahTree(tr,{bv,bn,bi,bc,lv,ln,li,lc,x0,z0},x,e,z,u,lo,ty===2);
- if(st.lf)for(const tp of st.tips)leafCluster(tr,{lv,ln,li,lc,x0,z0},tp[0],tp[1],tp[2],tp[3],st.lf,lo);
+ const st=savannahTree(tr,{bv,bn,bi,bc,buv,lv,ln,li,lc,luv,x0,z0},x,e,z,u,lo,ty===2);
+ if(st.lf)for(const tp of st.tips)leafCluster(tr,{lv,ln,li,lc,luv,x0,z0},tp[0],tp[1],tp[2],tp[3],st.lf,lo);
  col.push([x,z,st.R+.2,1e9]);tpos.push([x,z,st.R,st.pr])};
 
  for(let i=0;i<4;i++){for(let j=0;j<4;j++){const x=x0+(i+rng())*16,z=z0+(j+rng())*16,e=H(x,z),s=e-WL,m=Mo(x,z,e),q=vn(x/150,z/150,11)*.7+vn(x/38,z/38,12)*.3,p=(q>.6?.5:q>.5?.14:.025)*(s>.6?1:0)*(m>.3?1:.5),a=rng(),b=rng(),d=rng();
@@ -916,8 +928,8 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
   yield;
  }
  const D=new T.Object3D(),co=new T.Color(),made=[];D.rotation.order='YXZ';
- if(bv.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(bv,3));g.setAttribute('normal',new T.Float32BufferAttribute(bn,3));g.setAttribute('color',new T.Float32BufferAttribute(bc,3));g.setIndex(bi);const m=new T.InstancedMesh(g,MT_BRANCH,1);m.setMatrixAt(0,new T.Matrix4());m.castShadow=true;m.customDepthMaterial=treeDepth;m.frustumCulled=false;made.push(m)}
- if(lv.length){const g2=new T.BufferGeometry();g2.setAttribute('position',new T.Float32BufferAttribute(lv,3));g2.setAttribute('normal',new T.Float32BufferAttribute(ln,3));g2.setAttribute('color',new T.Float32BufferAttribute(lc,3));g2.setIndex(li);const m2=new T.InstancedMesh(g2,MT_LEAF,1);m2.setMatrixAt(0,new T.Matrix4());m2.castShadow=true;m2.customDepthMaterial=treeDepth;m2.frustumCulled=false;made.push(m2)}
+ if(bv.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(bv,3));g.setAttribute('normal',new T.Float32BufferAttribute(bn,3));g.setAttribute('color',new T.Float32BufferAttribute(bc,3));g.setAttribute('uv',new T.Float32BufferAttribute(buv,2));g.setIndex(bi);const m=new T.InstancedMesh(g,MT_BRANCH,1);m.setMatrixAt(0,new T.Matrix4());m.castShadow=true;m.customDepthMaterial=treeDepth;m.frustumCulled=false;made.push(m)}
+ if(lv.length){const g2=new T.BufferGeometry();g2.setAttribute('position',new T.Float32BufferAttribute(lv,3));g2.setAttribute('normal',new T.Float32BufferAttribute(ln,3));g2.setAttribute('color',new T.Float32BufferAttribute(lc,3));g2.setAttribute('uv',new T.Float32BufferAttribute(luv,2));g2.setIndex(li);const m2=new T.InstancedMesh(g2,MT_LEAF,1);m2.setMatrixAt(0,new T.Matrix4());m2.castShadow=true;m2.customDepthMaterial=LEAF_DEPTH;m2.frustumCulled=false;made.push(m2)}
  const add=(g,list,sh,f,mat)=>{if(!list.length)return;const im=new T.InstancedMesh(g,mat,list.length);list.forEach((a,i)=>{D.rotation.set(0,0,0);D.scale.set(1,1,1);f(a);if(mat===MT||mat===MR)co.convertSRGBToLinear();D.updateMatrix();im.setMatrixAt(i,D.matrix);im.setColorAt(i,co)});im.frustumCulled=false;im.castShadow=sh;im.userData.sh=sh;if(mat===MTS||mat===LM)im.customDepthMaterial=treeDepth;made.push(im)};
  const cyl=a=>{D.position.set(a[0]-x0,a[1],a[2]-z0);D.scale.set(a[3],a[4],a[3]);D.rotation.set(a[5],a[6],0);co.setRGB(...a[7])};
  add(lo?TRG:TRT,tt,true,cyl,MTS);add(TRG,tk,true,cyl,MTS);add(TRB,bk,true,cyl,MTS);yield;

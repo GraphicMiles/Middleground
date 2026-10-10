@@ -42,7 +42,7 @@ const zone=(x,z)=>{const e=H(x,z),m=Mo(x,z,e);return e<WL+.3?'water edge / reeds
 /* ---------- renderer / scene ---------- */
 const cv=$('c'),ren=new T.WebGLRenderer({canvas:cv,antialias:(devicePixelRatio||1)<2,powerPreference:'high-performance'});
 let pr=Math.min(devicePixelRatio||1,1.5);ren.setPixelRatio(pr);ren.setSize(innerWidth,innerHeight);
-ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;
+ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=1.1;ren.outputColorSpace=T.SRGBColorSpace;
 const scene=new T.Scene(),cam=new T.PerspectiveCamera(70,innerWidth/innerHeight,.1,1200);cam.rotation.order='YXZ';
 scene.fog=new T.FogExp2(0xbdc9c6,.0046);const world=new T.Group();scene.add(world);
 const U={uOrg:{value:new T.Vector2()},uT:{value:0},uSun:{value:new T.Vector3()},uFog:{value:new T.Color()},uFogD:{value:.0046},uFar:{value:175},uZen:{value:new T.Color()},uPl:{value:new T.Vector3()},uMv:{value:0},uCr:{value:1}};
