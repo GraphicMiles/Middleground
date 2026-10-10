@@ -583,7 +583,7 @@ function* genTerrain(c){const x0=c.cx*CS,z0=c.cz*CS,hp=new Float32Array(PN*PN);
  const w=new T.Mesh(wg,WM);w.renderOrder=2;
  c.soilInfo=soilInfo;c.eg=eg;c.mg=mg;c.waterInfo=waterInfo;c.cs=cs;c.cs0=cs;c.meshes.push(t,w);world.add(t,w);place(c)}
 const samp=(A,lx,lz)=>{const u=lx/CS*SEG,v=lz/CS*SEG,i=Math.min(SEG-1,u|0),j=Math.min(SEG-1,v|0),fu=u-i,fv=v-j;return lerp(lerp(A[j*N+i],A[j*N+i+1],fu),lerp(A[(j+1)*N+i],A[(j+1)*N+i+1],fu),fv)};
-const GT=[0,900,3600,10000],GQ=[.8,.5,1];
+const GT=[0,900,6000,16000],GQ=[.8,.5,1];
 const tierOf=c=>c.d<=1?3:c.d===2?2:(c.d===3&&U.uFar.value>130)?1:0;
 const wantLo=c=>c.lo===undefined?c.d>2:(c.lo?c.d>2:c.d>=4);
 function* genGrass(c){const tier=c.tier=tierOf(c);c.gq=qm;const want=Math.floor(GT[tier]*GQ[qm]);
@@ -692,8 +692,9 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
   const L=dead?1.5+tr()*1.4:(1.75+tr()*1.7)*spread*lops*1.1;
   const limb=growChain(tr,env,q.end.slice(0,3),nd,q.end[3]*.7,L,lo?1:2,.62,.10,dead?-.02:.03+SP[4],cc,lo?tips:null,pr);
   if(!lo&&!dead)tips.push([limb.end[0],limb.end[1],limb.end[2],pr*.85,tr()*6.28]);
-  if(!lo&&!dead)for(let w=0;w<4;w++){
-   const wa=ang+(w-1.5)*.6;const ws=[Math.cos(wa),0,Math.sin(wa)];
+  const NT=(!lo&&env.hi)?5:4;
+  if(!lo&&!dead)for(let w=0;w<NT;w++){
+   const wa=ang+(w-(NT-1)/2)*.6;const ws=[Math.cos(wa),0,Math.sin(wa)];
    let wd=nrm([limb.dir[0]+ws[0]*.5,limb.dir[1]+.25+SP[4],limb.dir[2]+ws[2]*.5]);
    growChain(tr,env,limb.end.slice(0,3),wd,limb.end[3]*.7,L*.5,1,.6,.12,.05+SP[4],cc,tips,pr*.8);
   }
@@ -715,6 +716,7 @@ const LEAF=_ct(64,(g,s)=>{g.clearRect(0,0,s,s);g.strokeStyle='#fff';g.lineWidth=
  for(let i=0;i<7;i++){const y=8+i*7,ln=4+(i<4?i*2.4:(6-i)*2.4);
   for(const q of[-1,1]){g.fillStyle='#fff';g.beginPath();g.ellipse(s/2+q*ln,y,ln*.9,3,q*.5,0,7);g.fill()}}});
 const LEAF_DEPTH=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,map:LEAF,alphaTest:.5});
+{const AN=ren.capabilities.getMaxAnisotropy();BARK.anisotropy=AN;LEAF.anisotropy=AN;}
 const MT_BRANCH=mkMT(true);
 MT_BRANCH.vertexColors=true;MT_BRANCH.map=BARK;
 MT_BRANCH.side=T.DoubleSide;
@@ -741,10 +743,11 @@ function addLeaf(tr,env,x,y,z,size,col){
  }
 }
 function leafCluster(tr,env,x,y,z,rad,lf,lo){
- const cards=lo?6:40;
+ const hi=env.hi;
+ const cards=lo?6:hi?64:40;
  for(let i=0;i<cards;i++){
   const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
-  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:.5)+tr()*.3,lf);
+  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:hi?.32:.5)+tr()*(hi?.22:.3),lf);
  }
 }
 const MT_LEAF=mkMT(true,true);
@@ -897,7 +900,7 @@ function* genAquatic(c){
  for(const m of made){c.meshes.push(m);world.add(m)}place(c);
 }
 
-function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],tt=[],bk=[],pd=[],col=[],bq=[],tpos=[],bv=[],bn=[],bi=[],bc=[],buv=[],lv=[],ln=[],li=[],lc=[],luv=[],seg=c.d<=1?8:6,lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
+function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],ro=[],tk=[],tt=[],bk=[],pd=[],col=[],bq=[],tpos=[],bv=[],bn=[],bi=[],bc=[],buv=[],lv=[],ln=[],li=[],lc=[],luv=[],hi=c.d<=1,seg=c.d<=1?10:(c.d===2?8:6),lo=c.lo=wantLo(c);let cs=c.cs0,tr=rng;
  const br=(x,y,z,r,len,t,a,d,cc,lf,pr,root)=>{(root?tt:tk).push([x,y,z,r,len,t,a,cc]);const ex=x+Math.sin(t)*Math.sin(a)*len,ey=y+Math.cos(t)*len,ez=z+Math.sin(t)*Math.cos(a)*len;
   if(d>0){const n=2+(tr()<.35?1:0);for(let i=0;i<n;i++)br(ex,ey,ez,r*.6,len*(.62+.25*tr()),Math.min(1.45,t+(lf?.15+tr()*.5:-.1+tr()*.45)),a+(i-(n-1)/2)*1.5+(tr()-.5)*.6,d-1,cc,lf,pr)}
   else if(lf)pd.push([ex,ey,ez,pr*(.75+.5*tr()),tr()*6.28,lf]);return[ex,ey,ez]};
@@ -905,7 +908,7 @@ function* genProps(c){const rng=rngf(c.cx,c.cz,99),x0=c.cx*CS,z0=c.cz*CS,bu=[],r
  const tree=(x,e,z,ty,u)=>{tr=rngf(Math.floor(x*64),Math.floor(z*64),55);const a=tr()*6.28;cs+=x+z;
   if(ty===1){const r=1.1+tr()*.9,Hh=4.5+tr()*3.5;bk.push([x,e-.3,z,r,Hh,(tr()-.5)*.05,a,[.46,.40,.34]]);
    for(let i=0;i<5;i++)br(x,e+Hh-.3,z,.26+.1*tr(),1.6+tr()*1.6,.55+tr()*.5,a+i*1.25+tr()*.5,lo?0:1,[.42,.37,.31],[.155,.19,.072],.95);col.push([x,z,r*.95,1e9]);tpos.push([x,z,r,r*.9]);return}
- const st=savannahTree(tr,{bv,bn,bi,bc,buv,lv,ln,li,lc,luv,x0,z0,seg},x,e,z,u,lo,ty===2);
+ const st=savannahTree(tr,{bv,bn,bi,bc,buv,lv,ln,li,lc,luv,x0,z0,seg,hi},x,e,z,u,lo,ty===2);
  if(st.lf)for(const tp of st.tips)leafCluster(tr,{lv,ln,li,lc,luv,x0,z0},tp[0],tp[1],tp[2],tp[3],st.lf,lo);
  col.push([x,z,st.R+.2,1e9]);tpos.push([x,z,st.R,st.pr])};
 

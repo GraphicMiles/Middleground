@@ -139,7 +139,7 @@ function* genTerrain(c){const x0=c.cx*CS,z0=c.cz*CS,hp=new Float32Array(PN*PN);
  const w=new T.Mesh(wg,WM);w.renderOrder=2;
  c.eg=eg;c.mg=mg;c.cs=cs;c.cs0=cs;c.meshes.push(t,w);world.add(t,w);place(c)}
 const samp=(A,lx,lz)=>{const u=lx/CS*SEG,v=lz/CS*SEG,i=Math.min(SEG-1,u|0),j=Math.min(SEG-1,v|0),fu=u-i,fv=v-j;return lerp(lerp(A[j*N+i],A[j*N+i+1],fu),lerp(A[(j+1)*N+i],A[(j+1)*N+i+1],fu),fv)};
-const GT=[0,900,3600,10000],GQ=[.8,.5,1];
+const GT=[0,900,6000,16000],GQ=[.8,.5,1];
 const tierOf=c=>c.d<=1?3:c.d===2?2:(c.d===3&&U.uFar.value>130)?1:0;
 const wantLo=c=>c.lo===undefined?c.d>2:(c.lo?c.d>2:c.d>=4);
 function* genGrass(c){const tier=c.tier=tierOf(c);c.gq=qm;const want=Math.floor(GT[tier]*GQ[qm]);

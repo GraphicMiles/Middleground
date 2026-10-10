@@ -87,8 +87,9 @@ function savannahTree(tr,env,x,e,z,u,lo,dead){
   const L=dead?1.5+tr()*1.4:(1.75+tr()*1.7)*spread*lops*1.1;
   const limb=growChain(tr,env,q.end.slice(0,3),nd,q.end[3]*.7,L,lo?1:2,.62,.10,dead?-.02:.03+SP[4],cc,lo?tips:null,pr);
   if(!lo&&!dead)tips.push([limb.end[0],limb.end[1],limb.end[2],pr*.85,tr()*6.28]);
-  if(!lo&&!dead)for(let w=0;w<4;w++){
-   const wa=ang+(w-1.5)*.6;const ws=[Math.cos(wa),0,Math.sin(wa)];
+  const NT=(!lo&&env.hi)?5:4;
+  if(!lo&&!dead)for(let w=0;w<NT;w++){
+   const wa=ang+(w-(NT-1)/2)*.6;const ws=[Math.cos(wa),0,Math.sin(wa)];
    let wd=nrm([limb.dir[0]+ws[0]*.5,limb.dir[1]+.25+SP[4],limb.dir[2]+ws[2]*.5]);
    growChain(tr,env,limb.end.slice(0,3),wd,limb.end[3]*.7,L*.5,1,.6,.12,.05+SP[4],cc,tips,pr*.8);
   }
@@ -110,6 +111,7 @@ const LEAF=_ct(64,(g,s)=>{g.clearRect(0,0,s,s);g.strokeStyle='#fff';g.lineWidth=
  for(let i=0;i<7;i++){const y=8+i*7,ln=4+(i<4?i*2.4:(6-i)*2.4);
   for(const q of[-1,1]){g.fillStyle='#fff';g.beginPath();g.ellipse(s/2+q*ln,y,ln*.9,3,q*.5,0,7);g.fill()}}});
 const LEAF_DEPTH=new T.MeshDepthMaterial({depthPacking:T.RGBADepthPacking,map:LEAF,alphaTest:.5});
+{const AN=ren.capabilities.getMaxAnisotropy();BARK.anisotropy=AN;LEAF.anisotropy=AN;}
 const MT_BRANCH=mkMT(true);
 MT_BRANCH.vertexColors=true;MT_BRANCH.map=BARK;
 MT_BRANCH.side=T.DoubleSide;
@@ -136,10 +138,11 @@ function addLeaf(tr,env,x,y,z,size,col){
  }
 }
 function leafCluster(tr,env,x,y,z,rad,lf,lo){
- const cards=lo?6:40;
+ const hi=env.hi;
+ const cards=lo?6:hi?64:40;
  for(let i=0;i<cards;i++){
   const ox=(tr()-.5)*rad*1.7,oy=(tr()-.5)*rad*1.0,oz=(tr()-.5)*rad*1.7;
-  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:.5)+tr()*.3,lf);
+  addLeaf(tr,env,x+ox,y+oy,z+oz,(lo?.95:hi?.32:.5)+tr()*(hi?.22:.3),lf);
  }
 }
 const MT_LEAF=mkMT(true,true);
